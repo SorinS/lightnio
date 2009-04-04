@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+<!-- 
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+  
+     http://www.apache.org/licenses/LICENSE-2.0
+  
+   Unless required by applicable law or agreed to in writing,
+   software distributed under the License is distributed on an
+   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+   KIND, either express or implied.  See the License for the
+   specific language governing permissions and limitations
+   under the License.
+-->
+<chapter id="framework">
+    <title>Fundamentals</title>
+    <section>
+        <title>I/O reactor</title>
+        <para>
+        LightNIO is based on the Reactor pattern as described by Doug Lea. The purpose of I/O 
+        reactors is to react to I/O events and to dispatch event notifications to individual I/O 
+        sessions. The main idea of I/O reactor pattern is to break away from the one thread per 
+        connection model imposed by the classic blocking I/O model. The <interfacename>IOReactor
+        </interfacename> interface represents an abstract object implementing the Reactor pattern. 
+        Internally, <interfacename>IOReactor</interfacename> implementations encapsulate 
+        functionality of the NIO <classname>java.nio.channels.Selector</classname>.
+        </para>
+        <para>
+        I/O reactors usually employ a small number of dispatch threads (often as few as one) to 
+        dispatch I/O event notifications to a much greater number (often as many as several 
+        thousands) of I/O sessions or connections. It is generally recommended to have one dispatch 
+        thread per CPU core.
+        </para>
+        <programlisting><![CDATA[
+IOReactorConfig config = new IOReactorConfig();
+config.setWorkerCount(2);
+IOReactor ioreactor = new DefaultConnectingIOReactor(config);
+]]></programlisting>
+        <section>
+            <title>I/O dispatchers</title>
+            <para>
+            <interfacename>IOReactor</interfacename> implementations make use of the 
+            <interfacename>IOEventDispatch</interfacename> interface to notify clients of events 
+            pending for a particular session. All methods of the <interfacename>IOEventDispatch
+            </interfacename> are executed on a dispatch thread of the I/O reactor. Therefore, it is 
+            important that processing that takes place in the event methods will not block the 
+            dispatch thread for too long, as the I/O reactor will be unable to react to other 
+            events. 
+            </para>
+            <programlisting><![CDATA[
+IOReactorConfig config = new IOReactorConfig();
+config.setWorkerCount(2);
+IOReactor ioreactor = new DefaultConnectingIOReactor(config);
+     
+IOEventDispatch eventDispatch = new MyIOEventDispatch();
+ioreactor.execute(eventDispatch);
+]]></programlisting>
+            <para>
+            Generic I/O events as defined by the <interfacename>IOEventDispatch</interfacename> 
+            interface:
+            </para>
+            <itemizedlist>
+                <listitem>
+                    <formalpara>
+                    <title><methodname>connected</methodname>:</title>
+                    Triggered when a new session has been created.
+                    </formalpara>
+                </listitem>
+                <listitem>
+                    <formalpara>
+                    <title><methodname>inputReady</methodname>:</title>
+                    Triggered when the session has pending input.
+                    </formalpara>
+                </listitem>
+                <listitem>
+                    <formalpara>
+                    <title><methodname>outputReady</methodname>:</title>
+                    Triggered when the session is ready for output.
+                    </formalpara>
+                </listitem>
+                <listitem>
+                    <formalpara>
+                    <title><methodname>timeout</methodname>:</title>
+                    Triggered when the session has timed out.
+                    </formalpara>
+                </listitem>
+                <listitem>
+                    <formalpara>
+                    <title><methodname>disconnected</methodname>:</title>
+                    Triggered when the session has been terminated.
+                    </formalpara>
+                </listitem>
+            </itemizedlist>
+        </section>
+        <section>
+            <title>I/O reactor shutdown</title>
+            <para>
+            The shutdown of I/O reactors is a complex process and may usually take a while to 
+            complete. I/O reactors will attempt to gracefully terminate all active I/O sessions and 
+            dispatch threads approximately within the specified grace period. If any of the I/O 
+            sessions fails to terminate correctly, the I/O reactor will forcibly shut down 
+            remaining sessions.    
+            </para>
+            <programlisting><![CDATA[
+long gracePeriod = 3000L; // milliseconds
+ioreactor.shutdown(gracePeriod);
+]]></programlisting>
+            <para>
+            The <methodname>IOReactor#shutdown(long)</methodname> method is safe to call from any 
+            thread.
+            </para>
+        </section>
+        <section>
+            <title>I/O sessions</title>
+            <para>
+            The <interfacename>IOSession</interfacename> interface represents a sequence of 
+            logically related data exchanges between two end points. <interfacename>IOSession
+            </interfacename> encapsulates functionality of NIO <classname>
+            java.nio.channels.SelectionKey</classname> and <classname>
+            java.nio.channels.SocketChannel</classname>. The channel associated with the 
+            <interfacename>IOSession</interfacename> can be used to read data from and write data 
+            to the session.
+            </para>
+            <programlisting><![CDATA[
+IOSession iosession;
+ReadableByteChannel ch = (ReadableByteChannel) iosession.channel();
+ByteBuffer dst = ByteBuffer.allocate(2048); 
+ch.read(dst);
+]]></programlisting>
+        </section>
+        <section>
+            <title>I/O session state management</title>
+            <para>
+            I/O sessions are not bound to an execution thread, therefore one cannot use the context 
+            of the thread to store a session's state. All details about a particular session must 
+            be stored within the session itself. 
+            </para>
+            <programlisting><![CDATA[
+IOSession iosession;
+Object someState;
+iosession.setAttribute("state", someState);
+Object currentState = iosession.getAttribute("state");
+]]></programlisting>
+            <para>
+            Please note that if several sessions make use of shared objects, access to those 
+            objects must be made thread-safe. 
+            </para>
+        </section>
+        <section>
+            <title>I/O session event mask</title>
+            <para>
+            One can declare an interest in a particular type of I/O events for a particular I/O 
+            session by setting its event mask. 
+            </para>
+            <programlisting><![CDATA[
+IOSession iosession;
+iosession.setEventMask(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+]]></programlisting>
+            <para>
+            One can also toggle <literal>OP_READ</literal> and <literal>OP_WRITE</literal> flags 
+            individually.
+            </para>
+            <programlisting><![CDATA[
+iosession.setEvent(SelectionKey.OP_READ);
+iosession.clearEvent(SelectionKey.OP_READ);
+]]></programlisting>
+            <para>
+            Event notifications will not take place if the corresponding interest flag is not set.
+            </para>
+        </section>
+        <section>
+            <title>I/O session buffers</title>
+            <para>
+            Quite often I/O sessions need to maintain internal I/O buffers in order to transform 
+            input / output data prior to returning it to the consumer or writing it to the 
+            underlying channel. Memory management in LightNIO is based on the fundamental 
+            principle that the data consumer can read only as much input data as it can process 
+            without having to allocate more memory. That means, quite often some input data may 
+            remain unread in one of the internal or external session buffers. The I/O reactor can 
+            query the status of these session buffers, and make sure the consumer gets notified 
+            correctly as more data gets stored in one of the session buffers, thus allowing the 
+            consumer to read the remaining data once it is able to process it. I/O sessions can be 
+            made aware of the status of external session buffers using the <interfacename>
+            SessionBufferStatus</interfacename> interface. 
+            </para>
+            <programlisting><![CDATA[
+IOSession iosession;
+SessionBufferStatus myBufferStatus = new MySessionBufferStatus(); 
+iosession.setBufferStatus(myBufferStatus);
+iosession.hasBufferedInput();
+iosession.hasBufferedOutput();
+]]></programlisting>
+        </section>
+        <section>
+            <title>I/O session shutdown</title>
+            <para>
+            One can close an I/O session gracefully by calling <methodname>IOSession#close() 
+            </methodname> allowing the session to be closed in an orderly manner or by calling 
+            <methodname>IOSession#shutdown()</methodname> to forcibly close the underlying channel. 
+            The distinction between two methods is of primary importance for those types of I/O 
+            sessions that involve some sort of a session termination handshake such as SSL/TLS 
+            connections.
+            </para>
+        </section>
+        <section>
+            <title>Listening I/O reactors</title>
+            <para>
+            <interfacename>ListeningIOReactor</interfacename> represents an I/O reactor capable of 
+            listening for incoming connections on one or several ports.
+            </para>
+            <programlisting><![CDATA[
+ListeningIOReactor ioreactor;
+        
+ListenerEndpoint ep1 = ioreactor.listen(new InetSocketAddress(8081));
+ListenerEndpoint ep2 = ioreactor.listen(new InetSocketAddress(8082));
+ListenerEndpoint ep3 = ioreactor.listen(new InetSocketAddress(8083));
+
+// Wait until all endpoints are up
+ep1.waitFor();
+ep2.waitFor();
+ep3.waitFor();
+]]></programlisting>
+            <para>
+            Once an endpoint is fully initialized it starts accepting incoming connections and 
+            propagates I/O activity notifications to the <interfacename>IOEventDispatch
+            </interfacename> instance.
+            </para>
+            <para>
+            One can obtain a set of registered endpoints at runtime, query the status of an 
+            endpoint at runtime, and close it if desired.
+            </para>
+            <programlisting><![CDATA[
+ListeningIOReactor ioreactor;
+        
+Set<ListenerEndpoint> eps = ioreactor.getEndpoints();
+for (ListenerEndpoint ep: eps) {
+    // Still active?
+    System.out.println(ep.getAddress());
+    if (ep.isClosed()) {
+        // If not, has it terminated due to an exception?
+        if (ep.getException() != null) {
+            ep.getException().printStackTrace();
+        }
+    } else {
+        ep.close();
+    }
+}
+]]></programlisting>
+        </section>
+        <section>
+            <title>Connecting I/O reactors</title>
+            <para>
+            <interfacename>ConnectingIOReactor</interfacename> represents an I/O reactor capable of 
+            establishing connections with remote hosts.
+            </para>
+            <programlisting><![CDATA[
+ConnectingIOReactor ioreactor;
+
+SessionRequest sessionRequest = ioreactor.connect(
+        new InetSocketAddress("www.google.com", 80), 
+        null, null, null);
+]]></programlisting>
+            <para>
+            Opening a connection to a remote host usually tends to be a time consuming process and 
+            may take a while to complete. One can monitor and control the process of session 
+            initialization by means of the <interfacename>SessionRequest</interfacename>interface. 
+            </para>
+            <programlisting><![CDATA[
+// Make sure the request times out if connection 
+// has not been established after 1 sec
+sessionRequest.setConnectTimeout(1000);
+// Wait for the request to complete
+sessionRequest.waitFor();
+// Has request terminated due to an exception?
+if (sessionRequest.getException() != null) {
+    sessionRequest.getException().printStackTrace();
+}
+// Get hold of the new I/O session
+IOSession iosession = sessionRequest.getSession();
+]]></programlisting>
+            <para>
+            <interfacename>SessionRequest</interfacename> implementations are expected to be 
+            thread-safe. Session request can be aborted at any time by calling <methodname>
+            IOSession#cancel()</methodname> from another thread of execution.
+            </para>
+            <programlisting><![CDATA[
+if (!sessionRequest.isCompleted()) {
+    sessionRequest.cancel();
+}
+]]></programlisting>
+            <para>
+            One can pass several optional parameters to the <methodname>
+            ConnectingIOReactor#connect()</methodname> method to exert a greater control over the 
+            process of session initialization. 
+            </para>
+            <para>
+            A non-null local socket address parameter can be used to bind the socket to a specific 
+            local address.
+            </para>
+            <programlisting><![CDATA[
+ConnectingIOReactor ioreactor;
+
+SessionRequest sessionRequest = ioreactor.connect(
+        new InetSocketAddress("www.google.com", 80), 
+        new InetSocketAddress("192.168.0.10", 1234), 
+        null, null);
+]]></programlisting>
+            <para>
+            One can provide an attachment object, which will be added to the new session's context 
+            upon initialization. This object can be used to pass an initial processing state to 
+            the protocol handler.
+            </para>
+            <programlisting><![CDATA[
+MyState state = new MyState();
+SessionRequest sessionRequest = ioreactor.connect(
+        new InetSocketAddress("www.google.com", 80), 
+        null, state, null);
+sessionRequest.waitFor();
+        
+IOSession iosession = sessionRequest.getSession();
+MyState state = (MyState) iosession.getAttribute(
+    IOSession.ATTACHMENT_KEY);
+]]></programlisting>
+            <para>
+            It is often desirable to be able to react to the completion of a session request 
+            asynchronously without having to wait for it, blocking the current thread of execution. 
+            One can optionally provide an implementation <interfacename>SessionRequestCallback
+            </interfacename> interface to get notified of events related to session requests, such 
+            as request completion, cancellation, failure or timeout.
+            </para>
+            <programlisting><![CDATA[
+ConnectingIOReactor ioreactor;
+
+SessionRequest sessionRequest = ioreactor.connect(
+        new InetSocketAddress("www.google.com", 80), null, null,
+        new SessionRequestCallback() {
+
+            public void cancelled(SessionRequest request) {
+            }
+
+            public void completed(SessionRequest request) {
+                System.out.println("new connection to " + 
+                    request.getRemoteAddress());
+            }
+
+            public void failed(SessionRequest request) {
+                if (request.getException() != null) {
+                    request.getException().printStackTrace();
+                }
+            }
+
+            public void timeout(SessionRequest request) {
+            }
+            
+        });
+]]></programlisting>
+        </section>
+    </section>
+    <section>
+        <title>I/O reactor exception handling</title>
+        <para>
+        Protocol specific exceptions as well as those I/O exceptions thrown in the course of 
+        interaction with the session's channel are to be expected are to be dealt with by specific 
+        protocol handlers. These exceptions may result in termination of an individual session but 
+        should not affect the I/O reactor and all other active sessions. There are situations, 
+        however, when the I/O reactor itself encounters an internal problem such as an I/O 
+        exception in the underlying NIO classes or an unhandled runtime exception. Those types of 
+        exceptions are usually fatal and will cause the I/O reactor to shut down automatically.
+        </para>
+        <para>
+        There is a possibility to override this behaviour and prevent I/O reactors from shutting 
+        down automatically in case of a runtime exception or an I/O exception in internal classes. 
+        This can be accomplished by providing a custom implementation of the <interfacename>
+        IOReactorExceptionHandler</interfacename> interface.
+        </para>
+        <programlisting><![CDATA[
+DefaultConnectingIOReactor ioreactor;
+
+ioreactor.setExceptionHandler(new IOReactorExceptionHandler() {
+
+    public boolean handle(IOException ex) {
+        if (ex instanceof BindException) {
+            // bind failures considered OK to ignore
+            return true;
+        }
+        return false;
+    }
+
+    public boolean handle(RuntimeException ex) {
+        if (ex instanceof UnsupportedOperationException) {
+            // Unsupported operations considered OK to ignore
+            return true;
+        }
+        return false;
+    }
+    
+});
+]]></programlisting>
+        <para>
+        One needs to be very careful about discarding exceptions indiscriminately. It is often much 
+        better to let the I/O reactor shut down itself cleanly and restart it rather than leaving 
+        it in an inconsistent or unstable state.
+        </para>
+        <section>
+            <title>I/O reactor audit log</title>
+            <para>
+            If an I/O reactor is unable to automatically recover from an I/O or a runtime exception 
+            it will enter the shutdown mode. First off, it will close all active listeners and 
+            cancel all pending new session requests. Then it will attempt to close all active I/O 
+            sessions gracefully giving them some time to flush pending output data and terminate 
+            cleanly. Lastly, it will forcibly shut down those I/O sessions that still remain active 
+            after the grace period. This is a fairly complex process, where many things can fail at 
+            the same time and many different exceptions can be thrown in the course of the shutdown 
+            process. The I/O reactor will record all exceptions thrown during the shutdown process, 
+            including the original one that actually caused the shutdown in the first place, in an 
+            audit log. One can examine the audit log and decide whether it is safe to restart the 
+            I/O reactor.
+            </para>
+            <programlisting><![CDATA[
+DefaultConnectingIOReactor ioreactor;
+
+// Give it 5 sec grace period
+ioreactor.shutdown(5000);
+List<ExceptionEvent> events = ioreactor.getAuditLog();
+for (ExceptionEvent event: events) {
+    System.err.println("Time: " + event.getTimestamp());
+    event.getCause().printStackTrace();
+}
+]]></programlisting>
+        </section>
+    </section>
+</chapter>
