@@ -26,6 +26,7 @@ import org.junit.Test;
 
 import com.ok2c.lightnio.ListenerEndpoint;
 import com.ok2c.lightnio.SessionInputBuffer;
+import com.ok2c.lightnio.SessionRequest;
 import com.ok2c.lightnio.testprotocol.SimpleClient;
 import com.ok2c.lightnio.testprotocol.SimpleClientProtocolHandler;
 import com.ok2c.lightnio.testprotocol.SimpleTestJob;
@@ -91,7 +92,8 @@ public class TestIOReactors {
 		ListenerEndpoint listenerEndpoint = this.testserver.getListenerEndpoint();
 		listenerEndpoint.waitFor();
 		
-		InetSocketAddress target = (InetSocketAddress) listenerEndpoint.getAddress();
+		InetSocketAddress address = (InetSocketAddress) listenerEndpoint.getAddress();
+        InetSocketAddress target = new InetSocketAddress("localhost", address.getPort());
 		
 		SimpleTestJob[] testjobs = new SimpleTestJob[50];
 		for (int i = 0; i < testjobs.length; i++) {
@@ -99,7 +101,12 @@ public class TestIOReactors {
 		}
 		for (int i = 0; i < testjobs.length; i++) {
 			SimpleTestJob testjob = testjobs[i];
-			this.testclient.openConnection(target, testjob);
+			SessionRequest sessionRequest = this.testclient.openConnection(target, testjob);
+			sessionRequest.waitFor();
+			if (sessionRequest.getException() != null) {
+			    throw sessionRequest.getException();
+			}
+			Assert.assertNotNull(sessionRequest.getSession());
 		}
 		for (int i = 0; i < testjobs.length; i++) {
 			SimpleTestJob testjob = testjobs[i];

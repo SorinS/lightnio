@@ -37,7 +37,6 @@ public class SimpleTestState implements SessionBufferStatus {
 	private final SessionOutputBuffer outbuf;
 	
 	private SimpleTestStatus status;
-	private SimplePattern pattern;
 	
 	public SimpleTestState(final ByteBufferAllocator allocator) {
 		super();
@@ -78,14 +77,6 @@ public class SimpleTestState implements SessionBufferStatus {
 		this.status = status;
 	}
 
-	public SimplePattern getPattern() {
-		return this.pattern;
-	}
-
-	public void setPattern(final SimplePattern pattern) {
-		this.pattern = pattern;
-	}
-
 	@Override
 	public String toString() {
 		StringBuilder buffer = new StringBuilder();
@@ -97,9 +88,6 @@ public class SimpleTestState implements SessionBufferStatus {
 		buffer.append("]");
 		buffer.append("[out buffer: ");
 		buffer.append(this.outbuf.length());
-		buffer.append("]");
-		buffer.append("[pattern: ");
-		buffer.append(this.pattern);
 		buffer.append("]");
 		return buffer.toString();
 	}

@@ -21,6 +21,7 @@ import java.util.List;
 import com.ok2c.lightnio.IOEventDispatch;
 import com.ok2c.lightnio.IOReactorExceptionHandler;
 import com.ok2c.lightnio.IOReactorStatus;
+import com.ok2c.lightnio.SessionRequest;
 import com.ok2c.lightnio.impl.DefaultConnectingIOReactor;
 import com.ok2c.lightnio.impl.ExceptionEvent;
 import com.ok2c.lightnio.impl.IOReactorConfig;
@@ -41,12 +42,12 @@ public class SimpleClient {
     }
 
     private void execute(final SimpleClientProtocolHandler handler) throws IOException {
-        IOEventDispatch ioEventDispatch = new SimpleIOEventDispatch(handler);        
+        IOEventDispatch ioEventDispatch = new SimpleIOEventDispatch("client", handler);        
         this.ioReactor.execute(ioEventDispatch);
     }
     
-    public void openConnection(final InetSocketAddress address, final Object attachment) {
-        this.ioReactor.connect(address, null, attachment, null);
+    public SessionRequest openConnection(final InetSocketAddress address, final Object attachment) {
+         return this.ioReactor.connect(address, null, attachment, null);
     }
  
     public void start(final SimpleClientProtocolHandler handler) {

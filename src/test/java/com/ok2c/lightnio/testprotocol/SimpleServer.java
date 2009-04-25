@@ -43,7 +43,7 @@ public class SimpleServer {
     }
 
     private void execute(final SimpleServerProtocolHandler handler) throws IOException {
-        IOEventDispatch ioEventDispatch = new SimpleIOEventDispatch(handler);
+        IOEventDispatch ioEventDispatch = new SimpleIOEventDispatch("server", handler);
         this.ioReactor.execute(ioEventDispatch);
     }
     

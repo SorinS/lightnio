@@ -53,7 +53,7 @@ public class SimpleServerProtocolHandler implements SimpleProtocolHandler {
     			} catch (NumberFormatException ex) {
     				throw new IOException("Protocol violation");
     			}
-    			state.setPattern(new SimplePattern(p, count));
+    			session.setAttribute("pattern", new SimplePattern(p, count));
             	state.setStatus(SimpleTestStatus.REQUEST_RECEIVED);
             	session.setEventMask(SelectionKey.OP_WRITE);
     		}
@@ -72,7 +72,7 @@ public class SimpleServerProtocolHandler implements SimpleProtocolHandler {
     	SessionOutputBuffer outbuf = state.getOutBuffer();
     	switch (state.getStatus()) {
     	case REQUEST_RECEIVED:
-        	SimplePattern pattern = state.getPattern();
+            SimplePattern pattern = (SimplePattern) session.getAttribute("pattern");
         	CharArrayBuffer buffer = new CharArrayBuffer(32); 
         	buffer.append(pattern.getText());
         	for (int i = 0; i < pattern.getCount(); i++) {

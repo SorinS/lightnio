@@ -30,7 +30,7 @@ public class SimpleClientProtocolHandler implements SimpleProtocolHandler {
     	if (job == null) {
     		throw new IllegalStateException("Test job is null");
     	}
-    	state.setPattern(new SimplePattern(job.getPattern(), job.getCount()));
+    	session.setAttribute("pattern", new SimplePattern(job.getPattern(), job.getCount()));
     	session.setEventMask(SelectionKey.OP_WRITE);
     }
 
@@ -40,7 +40,7 @@ public class SimpleClientProtocolHandler implements SimpleProtocolHandler {
     	SessionOutputBuffer outbuf = state.getOutBuffer();
     	switch (state.getStatus()) {
     	case IDLE:
-        	SimplePattern pattern = state.getPattern();
+        	SimplePattern pattern = (SimplePattern) session.getAttribute("pattern");
         	outbuf.writeLine(pattern.toString());
         	state.setStatus(SimpleTestStatus.REQUEST_SENDING);
     	case REQUEST_SENDING:
