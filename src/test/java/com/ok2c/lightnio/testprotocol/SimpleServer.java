@@ -42,7 +42,7 @@ public class SimpleServer {
         this.ioReactor.setExceptionHandler(exceptionHandler);
     }
 
-    private void execute(final SimpleServerProtocolHandler handler) throws IOException {
+    private void execute(final SimpleProtocolHandler handler) throws IOException {
         IOEventDispatch ioEventDispatch = new SimpleIOEventDispatch("server", handler);
         this.ioReactor.execute(ioEventDispatch);
     }
@@ -51,7 +51,7 @@ public class SimpleServer {
         return this.endpoint;
     }
 
-    public void start(final SimpleServerProtocolHandler handler) {
+    public void start(final SimpleProtocolHandler handler) {
         this.endpoint = this.ioReactor.listen(new InetSocketAddress(0));
         this.thread = new IOReactorThread(handler);
         this.thread.start();
@@ -89,11 +89,11 @@ public class SimpleServer {
     
     private class IOReactorThread extends Thread {
 
-        private final SimpleServerProtocolHandler handler;
+        private final SimpleProtocolHandler handler;
         
         private volatile Exception ex;
         
-        public IOReactorThread(final SimpleServerProtocolHandler handler) {
+        public IOReactorThread(final SimpleProtocolHandler handler) {
             super();
             this.handler = handler;
         }
