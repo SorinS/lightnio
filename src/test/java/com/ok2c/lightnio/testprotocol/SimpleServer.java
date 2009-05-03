@@ -35,7 +35,9 @@ public class SimpleServer {
     
     public SimpleServer(IOReactorConfig config) throws IOException {
         super();
-        this.ioReactor = new DefaultListeningIOReactor(config);
+        this.ioReactor = new DefaultListeningIOReactor(
+                config, 
+                new SimpleThreadFactory("Server"));
     }
 
     public void setExceptionHandler(final IOReactorExceptionHandler exceptionHandler) {
@@ -43,7 +45,7 @@ public class SimpleServer {
     }
 
     private void execute(final SimpleProtocolHandler handler) throws IOException {
-        IOEventDispatch ioEventDispatch = new SimpleIOEventDispatch("server", handler);
+        IOEventDispatch ioEventDispatch = new SimpleIOEventDispatch("Server", handler);
         this.ioReactor.execute(ioEventDispatch);
     }
     

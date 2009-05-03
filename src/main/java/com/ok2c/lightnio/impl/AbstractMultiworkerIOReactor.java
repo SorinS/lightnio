@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.ok2c.lightnio.IOEventDispatch;
 import com.ok2c.lightnio.IOReactor;
@@ -518,10 +519,10 @@ public abstract class AbstractMultiworkerIOReactor implements IOReactor {
 
     static class DefaultThreadFactory implements ThreadFactory {
 
-        private static volatile int COUNT = 0;
+        private static AtomicInteger COUNT = new AtomicInteger(0);
 
         public Thread newThread(final Runnable r) {
-            return new Thread(r, "I/O dispatcher " + (++COUNT));
+            return new Thread(r, "I/O dispatcher " + (COUNT.incrementAndGet()));
         }
 
     }

@@ -83,6 +83,8 @@ public class SimpleServerProtocolHandler implements SimpleProtocolHandler {
     		outbuf.flush(session.channel());
     		if (!outbuf.hasData()) {
             	state.setStatus(SimpleTestStatus.RESPONSE_SENT);
+    		} else {
+    		    break;
     		}
     	case RESPONSE_SENT:
         	session.close();

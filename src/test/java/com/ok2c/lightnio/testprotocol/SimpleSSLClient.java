@@ -16,7 +16,13 @@ package com.ok2c.lightnio.testprotocol;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.URL;
+import java.security.KeyStore;
 import java.util.List;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 
 import com.ok2c.lightnio.IOEventDispatch;
 import com.ok2c.lightnio.IOReactorExceptionHandler;
@@ -25,26 +31,39 @@ import com.ok2c.lightnio.SessionRequest;
 import com.ok2c.lightnio.impl.DefaultConnectingIOReactor;
 import com.ok2c.lightnio.impl.ExceptionEvent;
 import com.ok2c.lightnio.impl.IOReactorConfig;
+import com.ok2c.lightnio.impl.SSLMode;
 
-public class SimpleClient {
+public class SimpleSSLClient {
 
     private final DefaultConnectingIOReactor ioReactor;
     
     private volatile IOReactorThread thread;
 
-    public SimpleClient(final IOReactorConfig config) throws IOException {
+    public SimpleSSLClient(final IOReactorConfig config) throws IOException {
         super();
         this.ioReactor = new DefaultConnectingIOReactor(
                 config, 
-                new SimpleThreadFactory("Client"));
+                new SimpleThreadFactory("SSL client"));
     }
 
     public void setExceptionHandler(final IOReactorExceptionHandler exceptionHandler) {
         this.ioReactor.setExceptionHandler(exceptionHandler);
     }
 
-    private void execute(final SimpleProtocolHandler handler) throws IOException {
-        IOEventDispatch ioEventDispatch = new SimpleIOEventDispatch("Client", handler);        
+    private void execute(final SimpleProtocolHandler handler) throws Exception {
+        ClassLoader cl = getClass().getClassLoader();
+        URL url = cl.getResource("test.keystore");
+        KeyStore keystore  = KeyStore.getInstance("jks");
+        keystore.load(url.openStream(), "nopassword".toCharArray());
+        TrustManagerFactory tmfactory = TrustManagerFactory.getInstance(
+                TrustManagerFactory.getDefaultAlgorithm());
+        tmfactory.init(keystore);
+        TrustManager[] trustmanagers = tmfactory.getTrustManagers(); 
+        SSLContext sslcontext = SSLContext.getInstance("TLS");
+        sslcontext.init(null, trustmanagers, null);
+        
+        IOEventDispatch ioEventDispatch = new SimpleSSLIOEventDispatch(
+                "SSL client", sslcontext, SSLMode.CLIENT, handler);
         this.ioReactor.execute(ioEventDispatch);
     }
     
