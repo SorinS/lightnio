@@ -22,18 +22,6 @@
         <format>tar.gz</format>
         <format>zip</format>
     </formats>
-    <moduleSets>
-        <moduleSet>
-          <excludes>
-            <exclude>org.apache.httpcomponents:httpcore-osgi</exclude>
-          </excludes>
-          <binaries>
-            <includeDependencies>false</includeDependencies>
-            <outputDirectory>/lib</outputDirectory>
-            <unpack>false</unpack>
-          </binaries>
-        </moduleSet>
-    </moduleSets>
     <fileSets>
         <fileSet>
           <directory></directory>
