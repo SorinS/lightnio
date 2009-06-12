@@ -24,7 +24,7 @@
   <artifactId>lightnio</artifactId>
   <name>LightNIO</name>
   <inceptionYear>2009</inceptionYear>
-  <version>0.1-SNAPSHOT</version>
+  <version>0.1</version>
   <description>LightNIO networking framework</description>
   <packaging>jar</packaging>
 
