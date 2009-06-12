@@ -231,7 +231,7 @@ public abstract class AbstractMultiworkerIOReactor implements IOReactor {
      * <p>
      * The following HTTP parameters affect execution of this method:
      * <p>
-     * The {@link NIOReactorPNames#SELECT_INTERVAL} parameter determines the
+     * The {@link IOReactorConfig#getSelectInterval()} parameter determines the
      * time interval in milliseconds at which the I/O reactor wakes up to check
      * for timed out sessions and session requests.
      *
@@ -331,9 +331,9 @@ public abstract class AbstractMultiworkerIOReactor implements IOReactor {
      * <p>
      * The following HTTP parameters affect execution of this method:
      * <p>
-     * The {@link NIOReactorPNames#GRACE_PERIOD} parameter determines the grace
-     * period the I/O reactors are expected to block waiting for individual
-     * worker threads to terminate cleanly.
+     * The {@link IOReactorConfig#getGracePeriod()} parameter determines the 
+     * grace period the I/O reactors are expected to block waiting 
+     * for individual worker threads to terminate cleanly.
      *
      * @throws InterruptedIOException if the shutdown sequence has been
      *   interrupted.
@@ -402,7 +402,7 @@ public abstract class AbstractMultiworkerIOReactor implements IOReactor {
             for (int i = 0; i < this.workerCount; i++) {
                 Thread t = this.threads[i];
                 if (t != null) {
-                    t.join(gracePeriod);
+                    t.join(this.gracePeriod);
                 }
             }
         } catch (InterruptedException ex) {
