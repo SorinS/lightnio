@@ -248,7 +248,7 @@ public class TestSessionInOutBuffers {
             out[i] = (byte)('0' + i);
         }
         ReadableByteChannel channel = newChannel(out);
-        SessionInputBuffer inbuf = new SessionInputBufferImpl(16, 16, Charset.forName("ASCII"));
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(1024, 16, Charset.forName("ASCII"));
         while (inbuf.fill(channel) > 0) {
         }
 
@@ -261,6 +261,106 @@ public class TestSessionInOutBuffers {
         }
     }
 
+    @Test
+    public void testReadByteBuffer() throws Exception {
+        byte[] pattern = "0123456789ABCDEF".getBytes("US-ASCII");
+        ReadableByteChannel channel = newChannel(pattern);        
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(1024, 16, Charset.forName("ASCII"));
+        while (inbuf.fill(channel) > 0) {
+        }
+        ByteBuffer dst = ByteBuffer.allocate(10);
+        Assert.assertEquals(10, inbuf.read(dst));
+        dst.flip();
+        Assert.assertEquals(dst, ByteBuffer.wrap(pattern, 0, 10));
+        dst.clear();
+        Assert.assertEquals(6, inbuf.read(dst));
+        dst.flip();
+        Assert.assertEquals(dst, ByteBuffer.wrap(pattern, 10, 6));
+    }
+    
+    @Test
+    public void testReadByteBufferWithMaxLen() throws Exception {
+        byte[] pattern = "0123456789ABCDEF".getBytes("US-ASCII");
+        ReadableByteChannel channel = newChannel(pattern);        
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(1024, 16, Charset.forName("ASCII"));
+        while (inbuf.fill(channel) > 0) {
+        }
+        ByteBuffer dst = ByteBuffer.allocate(16);
+        Assert.assertEquals(10, inbuf.read(dst, 10));
+        dst.flip();
+        Assert.assertEquals(dst, ByteBuffer.wrap(pattern, 0, 10));
+        dst.clear();
+        Assert.assertEquals(3, inbuf.read(dst, 3));
+        dst.flip();
+        Assert.assertEquals(dst, ByteBuffer.wrap(pattern, 10, 3));
+        Assert.assertEquals(3, inbuf.read(dst, 20));
+        dst.flip();
+        Assert.assertEquals(dst, ByteBuffer.wrap(pattern, 13, 3));
+    }
+
+    @Test
+    public void testReadToChannel() throws Exception {
+        byte[] pattern = "0123456789ABCDEF".getBytes("US-ASCII");
+        ReadableByteChannel channel = newChannel(pattern);        
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(1024, 16, Charset.forName("ASCII"));
+        while (inbuf.fill(channel) > 0) {
+        }
+        
+        ByteArrayOutputStream outstream = new ByteArrayOutputStream(); 
+        WritableByteChannel dst = newChannel(outstream);
+        
+        Assert.assertEquals(16, inbuf.read(dst));
+        Assert.assertEquals(ByteBuffer.wrap(pattern), ByteBuffer.wrap(outstream.toByteArray()));
+    }
+    
+    @Test
+    public void testReadToChannelWithMaxLen() throws Exception {
+        byte[] pattern = "0123456789ABCDEF".getBytes("US-ASCII");
+        ReadableByteChannel channel = newChannel(pattern);        
+        SessionInputBuffer inbuf = new SessionInputBufferImpl(1024, 16, Charset.forName("ASCII"));
+        while (inbuf.fill(channel) > 0) {
+        }
+        
+        ByteArrayOutputStream outstream = new ByteArrayOutputStream(); 
+        WritableByteChannel dst = newChannel(outstream);
+        
+        Assert.assertEquals(10, inbuf.read(dst, 10));
+        Assert.assertEquals(3, inbuf.read(dst, 3));
+        Assert.assertEquals(3, inbuf.read(dst, 10));
+        Assert.assertEquals(ByteBuffer.wrap(pattern), ByteBuffer.wrap(outstream.toByteArray()));
+    }
+    
+    @Test
+    public void testWriteByteBuffer() throws Exception {
+        byte[] pattern = "0123456789ABCDEF0123456789ABCDEF".getBytes("US-ASCII");
+
+        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(1024, 16, Charset.forName("UTF-8"));
+        ReadableByteChannel src = newChannel(pattern);        
+        outbuf.write(src);
+        
+        ByteArrayOutputStream outstream = new ByteArrayOutputStream(); 
+        WritableByteChannel channel = newChannel(outstream);
+        while (outbuf.flush(channel) > 0) {
+        }
+        Assert.assertEquals(ByteBuffer.wrap(pattern), ByteBuffer.wrap(outstream.toByteArray()));
+    }
+    
+    @Test
+    public void testWriteFromChannel() throws Exception {
+        byte[] pattern = "0123456789ABCDEF0123456789ABCDEF".getBytes("US-ASCII");
+
+        SessionOutputBuffer outbuf = new SessionOutputBufferImpl(1024, 16, Charset.forName("UTF-8"));
+        outbuf.write(ByteBuffer.wrap(pattern, 0, 16));
+        outbuf.write(ByteBuffer.wrap(pattern, 16, 10));
+        outbuf.write(ByteBuffer.wrap(pattern, 26, 6));
+
+        ByteArrayOutputStream outstream = new ByteArrayOutputStream(); 
+        WritableByteChannel channel = newChannel(outstream);
+        while (outbuf.flush(channel) > 0) {
+        }
+        Assert.assertEquals(ByteBuffer.wrap(pattern), ByteBuffer.wrap(outstream.toByteArray()));
+    }
+    
     static final int SWISS_GERMAN_HELLO [] = {
         0x47, 0x72, 0xFC, 0x65, 0x7A, 0x69, 0x5F, 0x7A, 0xE4, 0x6D, 0xE4
     };

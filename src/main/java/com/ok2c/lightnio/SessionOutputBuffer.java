@@ -47,6 +47,20 @@ public interface SessionOutputBuffer {
     int length();
 
     /**
+     * Returns the total capacity of this buffer.
+     *
+     * @return total buffer capacity.
+     */
+    int capacity();
+
+    /**
+     * Returns the available capacity of this buffer.
+     *
+     * @return available buffer capacity.
+     */
+    int available();
+
+    /**
      * Makes an attempt to flush the content of this buffer to the given
      * destination {@link WritableByteChannel}.
      *
