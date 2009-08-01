@@ -55,7 +55,7 @@ public class BasicFuture<T> implements Future<T> {
         return getResult();
     }
 
-    public T get(long timeout, final TimeUnit unit)
+    public synchronized T get(long timeout, final TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
         long msecs = unit.toMillis(timeout);
         long startTime = (msecs <= 0) ? 0 : System.currentTimeMillis();
