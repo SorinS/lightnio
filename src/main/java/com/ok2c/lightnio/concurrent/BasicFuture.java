@@ -85,12 +85,9 @@ public class BasicFuture<T> implements Future<T> {
         }
         this.completed = true;
         this.result = result;
-        try {
-            if (this.callback != null) {
-                this.callback.completed(this);
-            }
-        } finally {
-            notifyAll();
+        notifyAll();
+        if (this.callback != null) {
+            this.callback.completed(this);
         }
     }
 
@@ -103,12 +100,9 @@ public class BasicFuture<T> implements Future<T> {
         }
         this.completed = true;
         this.ex = exception;
-        try {
-            if (this.callback != null) {
-                this.callback.failed(this);
-            }
-        } finally {
-            notifyAll();
+        notifyAll();
+        if (this.callback != null) {
+            this.callback.failed(this);
         }
     }
 
@@ -118,12 +112,9 @@ public class BasicFuture<T> implements Future<T> {
         }
         this.completed = true;
         this.cancelled = true;
-        try {
-            if (this.callback != null) {
-                this.callback.cancelled(this);
-            }
-        } finally {
-            notifyAll();
+        notifyAll();
+        if (this.callback != null) {
+            this.callback.cancelled(this);
         }
         return true;
     }
