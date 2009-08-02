@@ -14,7 +14,6 @@
  */
 package com.ok2c.lightnio.impl.pool;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -37,21 +36,22 @@ public class SessionPool<T> {
     private final ConnectingIOReactor ioreactor;
     private final SessionRequestCallback sessionRequestCallback;
     private final RouteResolver<T> routeResolver;
-    private final int maxPerRoute;
-    private final int maxTotal;
     private final Map<T, SessionPoolForRoute<T>> routeToPool;
     private final LinkedList<LeaseRequest<T>> leasingRequests;
     private final Set<SessionRequest> pendingSessions;
     private final Set<PoolEntry<T>> leasedSessions;
     private final LinkedList<PoolEntry<T>> availableSessions;
+    private final Map<T, Integer> maxPerRoute;
     private final Lock lock;
 
     private volatile boolean isShutDown;
+    private volatile int defaultMaxPerRoute;
+    private volatile int maxTotal;
 
     public SessionPool(
             final ConnectingIOReactor ioreactor,
             final RouteResolver<T> routeResolver,
-            int maxPerRoute,
+            int defaultMaxPerRoute,
             int maxTotal) {
         super();
         if (ioreactor == null) {
@@ -63,17 +63,18 @@ public class SessionPool<T> {
         this.ioreactor = ioreactor;
         this.sessionRequestCallback = new InternalSessionRequestCallback();
         this.routeResolver = routeResolver;
-        this.maxPerRoute = maxPerRoute;
-        this.maxTotal = maxTotal;
         this.routeToPool = new HashMap<T, SessionPoolForRoute<T>>();
         this.leasingRequests = new LinkedList<LeaseRequest<T>>();
         this.pendingSessions = new HashSet<SessionRequest>();
         this.leasedSessions = new HashSet<PoolEntry<T>>();
         this.availableSessions = new LinkedList<PoolEntry<T>>();
+        this.maxPerRoute = new HashMap<T, Integer>();
         this.lock = new ReentrantLock();
+        this.defaultMaxPerRoute = defaultMaxPerRoute;
+        this.maxTotal = maxTotal;
     }
 
-    public void shutdown() throws IOException {
+    public void shutdown() {
         if (this.isShutDown) {
             return ;
         }
@@ -95,7 +96,6 @@ public class SessionPool<T> {
             this.leasingRequests.clear();
         } finally {
             this.lock.unlock();
-            this.ioreactor.shutdown();
         }
     }
 
@@ -188,14 +188,15 @@ public class SessionPool<T> {
                 this.leasedSessions.add(entry);
                 future.completed(entry);
             } else {
-                if (pool.getAvailableCount() > 0 && pool.getAllocatedCount() >= this.maxPerRoute) {
+                int max = getMaxPerRoute(route);
+                if (pool.getAvailableCount() > 0 && pool.getAllocatedCount() >= max) {
                     entry = pool.deleteLastUsed();
                     if (entry != null) {
                         this.availableSessions.remove(entry);
                         entryShutdown(entry);
                     }
                 }
-                if (pool.getAllocatedCount() < this.maxPerRoute) {
+                if (pool.getAllocatedCount() < max) {
                     it.remove();
                     SessionRequest sessionRequest = this.ioreactor.connect(
                             this.routeResolver.resolveRemoteAddress(route),
@@ -273,6 +274,54 @@ public class SessionPool<T> {
         }
     }
 
+    private int getMaxPerRoute(final T route) {
+        Integer v = this.maxPerRoute.get(route);
+        if (v != null) {
+            return v.intValue();
+        } else {
+            return this.defaultMaxPerRoute;
+        }
+    }
+
+    public void setTotalMax(int max) {
+        if (max <= 0) {
+            throw new IllegalArgumentException("Max value may not be negative or zero");
+        }
+        this.lock.lock();
+        try {
+            this.maxTotal = max;
+        } finally {
+            this.lock.unlock();
+        }
+    }
+
+    public void setDefaultMaxPerHost(int max) {
+        if (max <= 0) {
+            throw new IllegalArgumentException("Max value may not be negative or zero");
+        }
+        this.lock.lock();
+        try {
+            this.defaultMaxPerRoute = max;
+        } finally {
+            this.lock.unlock();
+        }
+    }
+
+    public void setMaxPerHost(final T route, int max) {
+        if (route == null) {
+            throw new IllegalArgumentException("Route may not be null");
+        }
+        if (max <= 0) {
+            throw new IllegalArgumentException("Max value may not be negative or zero");
+        }
+        this.lock.lock();
+        try {
+            this.maxPerRoute.put(route, max);
+        } finally {
+            this.lock.unlock();
+        }
+    }
+
     public PoolStats getTotalStats() {
         this.lock.lock();
         try {
@@ -294,7 +343,7 @@ public class SessionPool<T> {
                     pool.getLeasedCount(),
                     pool.getPendingCount(),
                     pool.getAvailableCount(),
-                    this.maxPerRoute);
+                    getMaxPerRoute(route));
         } finally {
             this.lock.unlock();
         }
