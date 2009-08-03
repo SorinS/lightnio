@@ -20,7 +20,6 @@ import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Future;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -28,7 +27,6 @@ import com.ok2c.lightnio.ConnectingIOReactor;
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionRequest;
 import com.ok2c.lightnio.SessionRequestCallback;
-import com.ok2c.lightnio.concurrent.FutureCallback;
 import com.ok2c.lightnio.pool.PoolStats;
 
 public class SessionPool<T> {
@@ -89,10 +87,6 @@ public class SessionPool<T> {
             this.leasedSessions.clear();
             this.pendingSessions.clear();
             this.availableSessions.clear();
-
-            for (LeaseRequest<T> request: this.leasingRequests) {
-                request.getFuture().cancel();
-            }
             this.leasingRequests.clear();
         } finally {
             this.lock.unlock();
@@ -108,24 +102,19 @@ public class SessionPool<T> {
         return pool;
     }
 
-    public Future<PoolEntry<T>> lease(
-            final T route,
-            final Object state,
-            final FutureCallback<PoolEntry<T>> callback) {
+    public void lease(final T route, final Object state, final PoolEntryCallback<T> callback) {
         if (this.isShutDown) {
             throw new IllegalStateException("Session pool has been shut down");
         }
-        PoolEntryFuture<T> future = new PoolEntryFuture<T>(callback);
         this.lock.lock();
         try {
-            LeaseRequest<T> request = new LeaseRequest<T>(route, state, future);
+            LeaseRequest<T> request = new LeaseRequest<T>(route, state, callback);
             this.leasingRequests.add(request);
 
             processPendingRequests();
         } finally {
             this.lock.unlock();
         }
-        return future;
     }
 
     public void release(final PoolEntry<T> entry, boolean reusable) {
@@ -165,12 +154,7 @@ public class SessionPool<T> {
 
             T route = request.getRoute();
             Object state = request.getState();
-            PoolEntryFuture<T> future = request.getFuture();
-
-            if (future.isDone()) {
-                it.remove();
-                continue;
-            }
+            PoolEntryCallback<T> callback = request.getCallback();
 
             if (getAllocatedTotal() >= this.maxTotal) {
                 if (!this.availableSessions.isEmpty()) {
@@ -186,7 +170,7 @@ public class SessionPool<T> {
             if (entry != null) {
                 it.remove();
                 this.leasedSessions.add(entry);
-                future.completed(entry);
+                callback.completed(entry);
             } else {
                 int max = getMaxPerRoute(route);
                 if (pool.getAvailableCount() > 0 && pool.getAllocatedCount() >= max) {
@@ -203,7 +187,7 @@ public class SessionPool<T> {
                             this.routeResolver.resolveLocalAddress(route),
                             route,
                             this.sessionRequestCallback);
-                    pool.addPending(sessionRequest, future);
+                    pool.addPending(sessionRequest, callback);
                 }
             }
         }

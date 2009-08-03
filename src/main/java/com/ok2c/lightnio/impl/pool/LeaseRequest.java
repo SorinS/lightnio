@@ -18,16 +18,16 @@ class LeaseRequest<T> {
 
     private final T route;
     private final Object state;
-    private final PoolEntryFuture<T> future;
+    private final PoolEntryCallback<T> callback;
 
     public LeaseRequest(
             final T route,
             final Object state,
-            final PoolEntryFuture<T> future) {
+            final PoolEntryCallback<T> callback) {
         super();
         this.route = route;
         this.state = state;
-        this.future = future;
+        this.callback = callback;
     }
 
     public T getRoute() {
@@ -38,8 +38,8 @@ class LeaseRequest<T> {
         return this.state;
     }
 
-    public PoolEntryFuture<T> getFuture() {
-        return this.future;
+    public PoolEntryCallback<T> getCallback() {
+        return this.callback;
     }
 
     @Override

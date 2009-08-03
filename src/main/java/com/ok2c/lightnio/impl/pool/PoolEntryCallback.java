@@ -14,17 +14,12 @@
  */
 package com.ok2c.lightnio.impl.pool;
 
-import com.ok2c.lightnio.concurrent.BasicFuture;
-import com.ok2c.lightnio.concurrent.FutureCallback;
+public interface PoolEntryCallback<T> {
 
-class PoolEntryFuture<T> extends BasicFuture<PoolEntry<T>> {
-
-    public PoolEntryFuture(final FutureCallback<PoolEntry<T>> callback) {
-        super(callback);
-    }
-
-    public void cancel() {
-        cancel(true);
-    }
-
+	void completed(PoolEntry<T> entry);
+	
+	void failed(Exception ex);
+	
+	void cancelled();
+	
 }

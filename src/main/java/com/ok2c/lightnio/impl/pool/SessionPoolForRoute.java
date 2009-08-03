@@ -30,14 +30,14 @@ class SessionPoolForRoute<T> {
     private final T route;
     private final Set<PoolEntry<T>> leasedSessions;
     private final LinkedList<PoolEntry<T>> availableSessions;
-    private final Map<SessionRequest, PoolEntryFuture<T>> pendingSessions;
+    private final Map<SessionRequest, PoolEntryCallback<T>> pendingSessions;
 
     public SessionPoolForRoute(final T route) {
         super();
         this.route = route;
         this.leasedSessions = new HashSet<PoolEntry<T>>();
         this.availableSessions = new LinkedList<PoolEntry<T>>();
-        this.pendingSessions = new HashMap<SessionRequest, PoolEntryFuture<T>>();
+        this.pendingSessions = new HashMap<SessionRequest, PoolEntryCallback<T>>();
     }
 
     public int getLeasedCount() {
@@ -106,47 +106,45 @@ class SessionPoolForRoute<T> {
 
     public void addPending(
             final SessionRequest sessionRequest,
-            final PoolEntryFuture<T> future) {
-        this.pendingSessions.put(sessionRequest, future);
+            final PoolEntryCallback<T> callback) {
+        this.pendingSessions.put(sessionRequest, callback);
     }
 
-    private PoolEntryFuture<T> removeRequest(final SessionRequest request) {
-        PoolEntryFuture<T> future = this.pendingSessions.remove(request);
-        if (future == null) {
+    private PoolEntryCallback<T> removeRequest(final SessionRequest request) {
+    	PoolEntryCallback<T> callback = this.pendingSessions.remove(request);
+        if (callback == null) {
             throw new IllegalStateException("Invalid session request");
         }
-        return future;
+        return callback;
     }
 
     public PoolEntry<T> completed(final SessionRequest request) {
-        PoolEntryFuture<T> future = removeRequest(request);
+    	PoolEntryCallback<T> callback = removeRequest(request);
         IOSession iosession = request.getSession();
         PoolEntry<T> entry = new PoolEntry<T>(this.route, iosession);
         this.leasedSessions.add(entry);
-        future.completed(entry);
+        callback.completed(entry);
         return entry;
     }
 
     public void cancelled(final SessionRequest request) {
-        PoolEntryFuture<T> future = removeRequest(request);
-        future.cancel();
+    	PoolEntryCallback<T> callback = removeRequest(request);
+    	callback.cancelled();
     }
 
     public void failed(final SessionRequest request) {
-        PoolEntryFuture<T> future = removeRequest(request);
-        future.failed(request.getException());
+    	PoolEntryCallback<T> callback = removeRequest(request);
+    	callback.failed(request.getException());
     }
 
     public void timeout(final SessionRequest request) {
-        PoolEntryFuture<T> future = removeRequest(request);
-        future.failed(new SocketTimeoutException());
+    	PoolEntryCallback<T> callback = removeRequest(request);
+    	callback.failed(new SocketTimeoutException());
     }
 
     public void shutdown() {
-        for (Map.Entry<SessionRequest, PoolEntryFuture<T>> entry:
-                this.pendingSessions.entrySet()) {
-            entry.getKey().cancel();
-            entry.getValue().cancel();
+        for (SessionRequest sessionRequest: this.pendingSessions.keySet()) {
+        	sessionRequest.cancel();
         }
         this.pendingSessions.clear();
         for (PoolEntry<T> entry: this.availableSessions) {
