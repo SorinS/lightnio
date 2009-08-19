@@ -79,9 +79,9 @@ public class BasicFuture<T> implements Future<T> {
         }
     }
 
-    public synchronized void completed(final T result) {
+    public synchronized boolean completed(final T result) {
         if (this.completed) {
-            return;
+            return false;
         }
         this.completed = true;
         this.result = result;
@@ -89,14 +89,12 @@ public class BasicFuture<T> implements Future<T> {
         if (this.callback != null) {
             this.callback.completed(this);
         }
+        return true;
     }
 
-    public synchronized void failed(final Exception exception) {
-        if (exception == null) {
-            return;
-        }
+    public synchronized boolean failed(final Exception exception) {
         if (this.completed) {
-            return;
+            return false;
         }
         this.completed = true;
         this.ex = exception;
@@ -104,6 +102,7 @@ public class BasicFuture<T> implements Future<T> {
         if (this.callback != null) {
             this.callback.failed(this);
         }
+        return true;
     }
 
     public synchronized boolean cancel(boolean mayInterruptIfRunning) {
