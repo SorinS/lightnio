@@ -17,7 +17,6 @@ package com.ok2c.lightnio.impl;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.nio.channels.CancelledKeyException;
-import java.nio.channels.Channel;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
@@ -271,11 +270,12 @@ public abstract class AbstractIOReactor implements IOReactor {
 
             // Close remaining active channels and the selector itself
             closeActiveChannels();
+            this.status = IOReactorStatus.SHUT_DOWN;
 
         } catch (ClosedSelectorException ex) {
         } finally {
             synchronized (this.shutdownMutex) {
-                this.status = IOReactorStatus.SHUT_DOWN;
+                hardShutdown();
                 this.shutdownMutex.notifyAll();
             }
         }
@@ -473,18 +473,16 @@ public abstract class AbstractIOReactor implements IOReactor {
      * @throws IOReactorException - not thrown currently
      */
     protected void closeActiveChannels() throws IOReactorException {
-        Set<SelectionKey> keys = this.selector.keys();
-        for (Iterator<SelectionKey> it = keys.iterator(); it.hasNext(); ) {
-            try {
-                SelectionKey key = it.next();
-                Channel channel = key.channel();
-                if (channel != null) {
-                    channel.close();
-                }
-            } catch (IOException ignore) {
-            }
-        }
         try {
+            Set<SelectionKey> keys = this.selector.keys();
+            for (Iterator<SelectionKey> it = keys.iterator(); it.hasNext(); ) {
+                SelectionKey key = it.next();
+                IOSession session = getSession(key);
+                if (!session.isClosed()) {
+                    session.close();
+                    sessionClosed(session);
+                }
+            }
             this.selector.close();
         } catch (IOException ignore) {
         }
@@ -556,8 +554,8 @@ public abstract class AbstractIOReactor implements IOReactor {
     }
 
     /**
-     * Adds an {@link InterestOpEntry} to the 
-     * {@link java.nio.channels.SelectionKey#interestOps(int) interestOps(int)} 
+     * Adds an {@link InterestOpEntry} to the
+     * {@link java.nio.channels.SelectionKey#interestOps(int) interestOps(int)}
      * queue for this instance.
      * @return <code>true</code> if the operation could be performed successfully,
      *   <code>false</code> otherwise.
