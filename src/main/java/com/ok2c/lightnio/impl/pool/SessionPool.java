@@ -169,6 +169,7 @@ public class SessionPool<T> {
             PoolEntry<T> entry = pool.getFreeEntry(state);
             if (entry != null) {
                 it.remove();
+                this.availableSessions.remove(entry);
                 this.leasedSessions.add(entry);
                 callback.completed(entry);
             } else {
