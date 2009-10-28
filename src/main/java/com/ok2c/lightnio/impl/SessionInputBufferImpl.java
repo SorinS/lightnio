@@ -123,23 +123,23 @@ public class SessionInputBufferImpl extends ExpandableBuffer implements SessionI
         return dst.write(this.buffer);
     }
 
+    protected int findLineDelim() {
+        for (int i = this.buffer.position(); i < this.buffer.limit(); i++) {
+            int b = this.buffer.get(i);
+            if (b == TextConsts.LF) {
+                return i + 1;
+            }
+        }
+        return -1;
+    }
+    
     public boolean readLine(
             final CharArrayBuffer linebuffer,
             boolean endOfStream) throws CharacterCodingException {
 
         setOutputMode();
-        // See if there is LF char present in the buffer
-        int pos = -1;
-        boolean hasLine = false;
-        for (int i = this.buffer.position(); i < this.buffer.limit(); i++) {
-            int b = this.buffer.get(i);
-            if (b == TextConsts.LF) {
-                hasLine = true;
-                pos = i + 1;
-                break;
-            }
-        }
-        if (!hasLine) {
+        int pos = findLineDelim();
+        if (pos == -1) {
             if (endOfStream && this.buffer.hasRemaining()) {
                 // No more data. Get the rest
                 pos = this.buffer.limit();
