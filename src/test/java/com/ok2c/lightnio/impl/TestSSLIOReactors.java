@@ -27,6 +27,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.ok2c.lightnio.IOReactorStatus;
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.ListenerEndpoint;
 import com.ok2c.lightnio.SessionInputBuffer;
@@ -97,6 +98,9 @@ public class TestSSLIOReactors {
 		
 		ListenerEndpoint listenerEndpoint = this.testserver.getListenerEndpoint();
 		listenerEndpoint.waitFor();
+		
+        Assert.assertEquals(IOReactorStatus.ACTIVE, this.testserver.getStatus());
+        Assert.assertEquals(IOReactorStatus.ACTIVE, this.testclient.getStatus());
 		
 		InetSocketAddress address = (InetSocketAddress) listenerEndpoint.getAddress();
         InetSocketAddress target = new InetSocketAddress("localhost", address.getPort());
@@ -175,6 +179,9 @@ public class TestSSLIOReactors {
         
         ListenerEndpoint listenerEndpoint = this.testserver.getListenerEndpoint();
         listenerEndpoint.waitFor();
+        
+        Assert.assertEquals(IOReactorStatus.ACTIVE, this.testserver.getStatus());
+        Assert.assertEquals(IOReactorStatus.ACTIVE, this.testclient.getStatus());
         
         InetSocketAddress address = (InetSocketAddress) listenerEndpoint.getAddress();
         InetSocketAddress target = new InetSocketAddress("localhost", address.getPort());

@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import javax.net.ssl.KeyManager;
@@ -36,35 +37,48 @@ import com.ok2c.lightnio.impl.SSLMode;
 public class SimpleSSLServer {
 
     private final DefaultListeningIOReactor ioReactor;
-
+    private final SSLContext sslcontext;
+    
     private volatile IOReactorThread thread;
     private ListenerEndpoint endpoint;
     
-    public SimpleSSLServer(IOReactorConfig config) throws IOException {
+    public SimpleSSLServer(IOReactorConfig config) throws Exception {
         super();
+        this.sslcontext = createSSLContext();
         this.ioReactor = new DefaultListeningIOReactor(
                 config, 
                 new SimpleThreadFactory("SSL server"));
     }
 
-    public void setExceptionHandler(final IOReactorExceptionHandler exceptionHandler) {
-        this.ioReactor.setExceptionHandler(exceptionHandler);
+    private KeyManagerFactory createKeyManagerFactory() throws NoSuchAlgorithmException {
+        String algo = KeyManagerFactory.getDefaultAlgorithm();
+        try {
+            return KeyManagerFactory.getInstance(algo);
+        } catch (NoSuchAlgorithmException ex) {
+            return KeyManagerFactory.getInstance("SunX509");
+        }
     }
-
-    private void execute(final SimpleProtocolHandler handler) throws Exception {
+    
+    protected SSLContext createSSLContext() throws Exception {
         ClassLoader cl = getClass().getClassLoader();
         URL url = cl.getResource("test.keystore");
         KeyStore keystore  = KeyStore.getInstance("jks");
         keystore.load(url.openStream(), "nopassword".toCharArray());
-        KeyManagerFactory kmfactory = KeyManagerFactory.getInstance(
-                KeyManagerFactory.getDefaultAlgorithm());
+        KeyManagerFactory kmfactory = createKeyManagerFactory();
         kmfactory.init(keystore, "nopassword".toCharArray());
         KeyManager[] keymanagers = kmfactory.getKeyManagers(); 
         SSLContext sslcontext = SSLContext.getInstance("TLS");
         sslcontext.init(keymanagers, null, null);
-        
+        return sslcontext;
+    }
+
+    public void setExceptionHandler(final IOReactorExceptionHandler exceptionHandler) {
+        this.ioReactor.setExceptionHandler(exceptionHandler);
+    }
+    
+    private void execute(final SimpleProtocolHandler handler) throws IOException {
         IOEventDispatch ioEventDispatch = new SimpleSSLIOEventDispatch(
-                "SSL server", sslcontext, SSLMode.SERVER, handler);
+                "SSL server", this.sslcontext, SSLMode.SERVER, handler);
         this.ioReactor.execute(ioEventDispatch);
     }
     

@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import javax.net.ssl.SSLContext;
@@ -35,35 +36,48 @@ import com.ok2c.lightnio.impl.SSLMode;
 
 public class SimpleSSLClient {
 
+    private final SSLContext sslcontext;
     private final DefaultConnectingIOReactor ioReactor;
     
     private volatile IOReactorThread thread;
 
-    public SimpleSSLClient(final IOReactorConfig config) throws IOException {
+    public SimpleSSLClient(final IOReactorConfig config) throws Exception {
         super();
+        this.sslcontext = createSSLContext();
         this.ioReactor = new DefaultConnectingIOReactor(
                 config, 
                 new SimpleThreadFactory("SSL client"));
+    }
+
+    private TrustManagerFactory createTrustManagerFactory() throws NoSuchAlgorithmException {
+        String algo = TrustManagerFactory.getDefaultAlgorithm();
+        try {
+            return TrustManagerFactory.getInstance(algo);
+        } catch (NoSuchAlgorithmException ex) {
+            return TrustManagerFactory.getInstance("SunX509");
+        }
+    }
+    
+    protected SSLContext createSSLContext() throws Exception {
+        ClassLoader cl = getClass().getClassLoader();
+        URL url = cl.getResource("test.keystore");
+        KeyStore keystore  = KeyStore.getInstance("jks");
+        keystore.load(url.openStream(), "nopassword".toCharArray());
+        TrustManagerFactory tmfactory = createTrustManagerFactory();
+        tmfactory.init(keystore);
+        TrustManager[] trustmanagers = tmfactory.getTrustManagers(); 
+        SSLContext sslcontext = SSLContext.getInstance("TLS");
+        sslcontext.init(null, trustmanagers, null);
+        return sslcontext;
     }
 
     public void setExceptionHandler(final IOReactorExceptionHandler exceptionHandler) {
         this.ioReactor.setExceptionHandler(exceptionHandler);
     }
 
-    private void execute(final SimpleProtocolHandler handler) throws Exception {
-        ClassLoader cl = getClass().getClassLoader();
-        URL url = cl.getResource("test.keystore");
-        KeyStore keystore  = KeyStore.getInstance("jks");
-        keystore.load(url.openStream(), "nopassword".toCharArray());
-        TrustManagerFactory tmfactory = TrustManagerFactory.getInstance(
-                TrustManagerFactory.getDefaultAlgorithm());
-        tmfactory.init(keystore);
-        TrustManager[] trustmanagers = tmfactory.getTrustManagers(); 
-        SSLContext sslcontext = SSLContext.getInstance("TLS");
-        sslcontext.init(null, trustmanagers, null);
-        
+    private void execute(final SimpleProtocolHandler handler) throws IOException {
         IOEventDispatch ioEventDispatch = new SimpleSSLIOEventDispatch(
-                "SSL client", sslcontext, SSLMode.CLIENT, handler);
+                "SSL client", this.sslcontext, SSLMode.CLIENT, handler);
         this.ioReactor.execute(ioEventDispatch);
     }
     
