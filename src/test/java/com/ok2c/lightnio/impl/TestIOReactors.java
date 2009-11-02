@@ -53,20 +53,20 @@ import com.ok2c.lightnio.testprotocol.SimpleTestStatus;
  * Unit tests for {@link DefaultConnectingIOReactor} and {@link DefaultListeningIOReactor}.
  */
 public class TestIOReactors {
-	
-	private SimpleClient testclient;
-	private SimpleServer testserver;
-	
-	@Before
-	public void setUp() throws Exception {
-		IOReactorConfig config = new IOReactorConfig();
-		config.setWorkerCount(2);
-		this.testclient = new SimpleClient(config);
-		this.testserver = new SimpleServer(config);
-	}
-	
-	@After
-	public void tearDown() throws Exception {
+
+    private SimpleClient testclient;
+    private SimpleServer testserver;
+
+    @Before
+    public void setUp() throws Exception {
+        IOReactorConfig config = new IOReactorConfig();
+        config.setWorkerCount(2);
+        this.testclient = new SimpleClient(config);
+        this.testserver = new SimpleServer(config);
+    }
+
+    @After
+    public void tearDown() throws Exception {
         try {
             this.testclient.shutdown();
         } catch (IOException ex) {
@@ -96,61 +96,61 @@ public class TestIOReactors {
                 }
             }
         }
-	}
+    }
 
-	@Test
-	public void testBasicIO() throws Exception {
-		this.testserver.start(new SimpleServerProtocolHandler());
-		this.testclient.start(new SimpleClientProtocolHandler());
-		
-		ListenerEndpoint listenerEndpoint = this.testserver.getListenerEndpoint();
-		listenerEndpoint.waitFor();
-		
-		InetSocketAddress address = (InetSocketAddress) listenerEndpoint.getAddress();
+    @Test
+    public void testBasicIO() throws Exception {
+        this.testserver.start(new SimpleServerProtocolHandler());
+        this.testclient.start(new SimpleClientProtocolHandler());
+
+        ListenerEndpoint listenerEndpoint = this.testserver.getListenerEndpoint();
+        listenerEndpoint.waitFor();
+
+        InetSocketAddress address = (InetSocketAddress) listenerEndpoint.getAddress();
         InetSocketAddress target = new InetSocketAddress("localhost", address.getPort());
-		
-		SimpleTestJob[] testjobs = new SimpleTestJob[50];
-		for (int i = 0; i < testjobs.length; i++) {
-			testjobs[i] = new SimpleTestJob(1000);
-		}
-		for (int i = 0; i < testjobs.length; i++) {
-			SimpleTestJob testjob = testjobs[i];
-			SessionRequest sessionRequest = this.testclient.openConnection(target, testjob);
-			sessionRequest.waitFor();
-			if (sessionRequest.getException() != null) {
-			    throw sessionRequest.getException();
-			}
-			Assert.assertNotNull(sessionRequest.getSession());
-		}
-		for (int i = 0; i < testjobs.length; i++) {
-			SimpleTestJob testjob = testjobs[i];
-			testjob.waitFor();
-			Exception ex = testjob.getException();
-			if (ex != null) {
-				throw ex;
-			}
-			SimpleTestState state = testjob.getTestState();
-			Assert.assertNotNull(state);
-			Assert.assertEquals(SimpleTestStatus.RESPONSE_RECEIVED, state.getStatus());
-			
-			String pattern = testjob.getPattern();
-			int count = testjob.getCount();
-			SessionInputBuffer inbuffer = state.getInBuffer();
-			
-			for (int n = 0; n < count; n++) {
-				String line = inbuffer.readLine(true);
-				Assert.assertEquals(pattern, line);
-			}
-			Assert.assertFalse(inbuffer.hasData());
-		}
-	}
-	
+
+        SimpleTestJob[] testjobs = new SimpleTestJob[50];
+        for (int i = 0; i < testjobs.length; i++) {
+            testjobs[i] = new SimpleTestJob(1000);
+        }
+        for (int i = 0; i < testjobs.length; i++) {
+            SimpleTestJob testjob = testjobs[i];
+            SessionRequest sessionRequest = this.testclient.openConnection(target, testjob);
+            sessionRequest.waitFor();
+            if (sessionRequest.getException() != null) {
+                throw sessionRequest.getException();
+            }
+            Assert.assertNotNull(sessionRequest.getSession());
+        }
+        for (int i = 0; i < testjobs.length; i++) {
+            SimpleTestJob testjob = testjobs[i];
+            testjob.waitFor();
+            Exception ex = testjob.getException();
+            if (ex != null) {
+                throw ex;
+            }
+            SimpleTestState state = testjob.getTestState();
+            Assert.assertNotNull(state);
+            Assert.assertEquals(SimpleTestStatus.RESPONSE_RECEIVED, state.getStatus());
+
+            String pattern = testjob.getPattern();
+            int count = testjob.getCount();
+            SessionInputBuffer inbuffer = state.getInBuffer();
+
+            for (int n = 0; n < count; n++) {
+                String line = inbuffer.readLine(true);
+                Assert.assertEquals(pattern, line);
+            }
+            Assert.assertFalse(inbuffer.hasData());
+        }
+    }
+
     @Test
     public void testGracefulShutdown() throws Exception {
         // Open connections and do nothing
         final int connNo = 10;
-        final CountDownLatch closedServerConns = new CountDownLatch(connNo); 
-        final CountDownLatch closedClientConns = new CountDownLatch(connNo); 
+        final CountDownLatch closedServerConns = new CountDownLatch(connNo);
+        final CountDownLatch closedClientConns = new CountDownLatch(connNo);
 
         this.testserver.start(new NoOpSimpleProtocolHandler() {
 
@@ -166,10 +166,10 @@ public class TestIOReactors {
             }
 
         });
-        
+
         ListenerEndpoint listenerEndpoint = this.testserver.getListenerEndpoint();
         listenerEndpoint.waitFor();
-        
+
         InetSocketAddress address = (InetSocketAddress) listenerEndpoint.getAddress();
         InetSocketAddress target = new InetSocketAddress("localhost", address.getPort());
 
@@ -185,14 +185,14 @@ public class TestIOReactors {
         // Make sure all connections go down
         this.testclient.shutdown();
         this.testserver.shutdown();
-        
+
         closedClientConns.await();
         Assert.assertEquals(0, closedClientConns.getCount());
-     
+
         closedServerConns.await();
         Assert.assertEquals(0, closedServerConns.getCount());
     }
-    
+
     @Test
     public void testRuntimeException() throws Exception {
         this.testserver.start(new NoOpSimpleProtocolHandler() {
@@ -205,13 +205,13 @@ public class TestIOReactors {
                 session.setEventMask(SelectionKey.OP_READ);
                 throw new OoopsieRuntimeException();
             }
-            
+
         });
         this.testclient.start(new NoOpSimpleProtocolHandler());
-        
+
         ListenerEndpoint listenerEndpoint = this.testserver.getListenerEndpoint();
         listenerEndpoint.waitFor();
-        
+
         InetSocketAddress address = (InetSocketAddress) listenerEndpoint.getAddress();
         InetSocketAddress target = new InetSocketAddress("localhost", address.getPort());
 
@@ -223,26 +223,26 @@ public class TestIOReactors {
         Assert.assertNotNull(sessionRequest.getSession());
 
         this.testserver.join(20000);
-        
+
         Exception ex = this.testserver.getException();
         Assert.assertNotNull(ex);
         Assert.assertTrue(ex instanceof IOReactorException);
         Assert.assertNotNull(ex.getCause());
         Assert.assertTrue(ex.getCause() instanceof OoopsieRuntimeException);
-        
+
         List<ExceptionEvent> auditlog = this.testserver.getAuditLog();
         Assert.assertNotNull(auditlog);
         Assert.assertEquals(1, auditlog.size());
-        
+
         // I/O reactor shut down itself
         Assert.assertEquals(IOReactorStatus.SHUT_DOWN, this.testserver.getStatus());
     }
 
     @Test
     public void testUnhandledRuntimeException() throws Exception {
-        
-        final CountDownLatch requestConns = new CountDownLatch(1); 
-        
+
+        final CountDownLatch requestConns = new CountDownLatch(1);
+
         this.testserver.setExceptionHandler(new IOReactorExceptionHandler() {
 
             public boolean handle(final IOException ex) {
@@ -250,12 +250,12 @@ public class TestIOReactors {
             }
 
             public boolean handle(final RuntimeException ex) {
-                requestConns.countDown();                    
+                requestConns.countDown();
                 return false;
             }
-          
+
         });
-        
+
         this.testserver.start(new NoOpSimpleProtocolHandler() {
 
             public void connected(IOSession session, SimpleTestState state) throws IOException {
@@ -269,10 +269,10 @@ public class TestIOReactors {
 
         });
         this.testclient.start(new NoOpSimpleProtocolHandler());
-        
+
         ListenerEndpoint listenerEndpoint = this.testserver.getListenerEndpoint();
         listenerEndpoint.waitFor();
-        
+
         InetSocketAddress address = (InetSocketAddress) listenerEndpoint.getAddress();
         InetSocketAddress target = new InetSocketAddress("localhost", address.getPort());
 
@@ -284,28 +284,28 @@ public class TestIOReactors {
         Assert.assertNotNull(sessionRequest.getSession());
 
         requestConns.await();
-        
+
         this.testserver.join(20000);
-        
+
         Exception ex = this.testserver.getException();
         Assert.assertNotNull(ex);
         Assert.assertTrue(ex instanceof IOReactorException);
         Assert.assertNotNull(ex.getCause());
         Assert.assertTrue(ex.getCause() instanceof OoopsieRuntimeException);
-        
+
         List<ExceptionEvent> auditlog = this.testserver.getAuditLog();
         Assert.assertNotNull(auditlog);
         Assert.assertEquals(1, auditlog.size());
-        
+
         // I/O reactor shut down itself
         Assert.assertEquals(IOReactorStatus.SHUT_DOWN, this.testserver.getStatus());
     }
 
     @Test
     public void testHandledRuntimeException() throws Exception {
-        
-        final CountDownLatch requestConns = new CountDownLatch(1); 
-        
+
+        final CountDownLatch requestConns = new CountDownLatch(1);
+
         this.testserver.setExceptionHandler(new IOReactorExceptionHandler() {
 
             public boolean handle(final IOException ex) {
@@ -313,12 +313,12 @@ public class TestIOReactors {
             }
 
             public boolean handle(final RuntimeException ex) {
-                requestConns.countDown();                    
+                requestConns.countDown();
                 return true;
             }
-          
+
         });
-        
+
         this.testserver.start(new NoOpSimpleProtocolHandler() {
 
             public void connected(IOSession session, SimpleTestState state) throws IOException {
@@ -332,10 +332,10 @@ public class TestIOReactors {
 
         });
         this.testclient.start(new NoOpSimpleProtocolHandler());
-        
+
         ListenerEndpoint listenerEndpoint = this.testserver.getListenerEndpoint();
         listenerEndpoint.waitFor();
-        
+
         InetSocketAddress address = (InetSocketAddress) listenerEndpoint.getAddress();
         InetSocketAddress target = new InetSocketAddress("localhost", address.getPort());
 
@@ -347,7 +347,7 @@ public class TestIOReactors {
         Assert.assertNotNull(sessionRequest.getSession());
 
         requestConns.await();
-        
+
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.testserver.getStatus());
         Assert.assertNull(this.testserver.getException());
     }
@@ -355,29 +355,29 @@ public class TestIOReactors {
     @Test
     public void testEndpointUpAndDown() throws Exception {
         final IOEventDispatch eventDispatch = new SimpleIOEventDispatch(
-                "server", 
+                "server",
                 new NoOpSimpleProtocolHandler());
-        
+
         final ListeningIOReactor ioreactor = new DefaultListeningIOReactor(
                 new IOReactorConfig());
-        
+
         Thread t = new Thread(new Runnable() {
-            
+
             public void run() {
                 try {
                     ioreactor.execute(eventDispatch);
                 } catch (IOException ex) {
                 }
             }
-            
+
         });
-        
+
         t.start();
-        
+
         Set<ListenerEndpoint> endpoints = ioreactor.getEndpoints();
         Assert.assertNotNull(endpoints);
         Assert.assertEquals(0, endpoints.size());
-        
+
         ListenerEndpoint endpoint9998 = ioreactor.listen(new InetSocketAddress(9998));
         endpoint9998.waitFor();
 
@@ -387,36 +387,36 @@ public class TestIOReactors {
         endpoints = ioreactor.getEndpoints();
         Assert.assertNotNull(endpoints);
         Assert.assertEquals(2, endpoints.size());
-        
+
         endpoint9998.close();
 
         endpoints = ioreactor.getEndpoints();
         Assert.assertNotNull(endpoints);
         Assert.assertEquals(1, endpoints.size());
-        
+
         ListenerEndpoint endpoint = endpoints.iterator().next();
-        
+
         Assert.assertEquals(9999, ((InetSocketAddress) endpoint.getAddress()).getPort());
-        
+
         ioreactor.shutdown(1000);
         t.join(1000);
-        
+
         Assert.assertEquals(IOReactorStatus.SHUT_DOWN, ioreactor.getStatus());
     }
 
     @Test
     public void testEndpointAlreadyBoundFatal() throws Exception {
         final IOEventDispatch eventDispatch = new SimpleIOEventDispatch(
-                "server", 
+                "server",
                 new NoOpSimpleProtocolHandler());
-        
+
         final ListeningIOReactor ioreactor = new DefaultListeningIOReactor(
                 new IOReactorConfig());
-        
+
         final CountDownLatch latch = new CountDownLatch(1);
-        
+
         Thread t = new Thread(new Runnable() {
-            
+
             public void run() {
                 try {
                     ioreactor.execute(eventDispatch);
@@ -425,11 +425,11 @@ public class TestIOReactors {
                     latch.countDown();
                 }
             }
-            
+
         });
-        
+
         t.start();
-        
+
         ListenerEndpoint endpoint1 = ioreactor.listen(new InetSocketAddress(9999));
         endpoint1.waitFor();
 
@@ -439,24 +439,24 @@ public class TestIOReactors {
 
         // I/O reactor is now expected to be shutting down
         latch.await(2000, TimeUnit.MILLISECONDS);
-        Assert.assertEquals(IOReactorStatus.SHUT_DOWN, ioreactor.getStatus());
-        
+        Assert.assertTrue(ioreactor.getStatus().compareTo(IOReactorStatus.SHUTTING_DOWN) >= 0);
+
         Set<ListenerEndpoint> endpoints = ioreactor.getEndpoints();
         Assert.assertNotNull(endpoints);
         Assert.assertEquals(0, endpoints.size());
-        
+
         ioreactor.shutdown(1000);
         t.join(1000);
-        
+
         Assert.assertEquals(IOReactorStatus.SHUT_DOWN, ioreactor.getStatus());
     }
-    
+
     @Test
     public void testEndpointAlreadyBoundNonFatal() throws Exception {
         final IOEventDispatch eventDispatch = new SimpleIOEventDispatch(
-                "server", 
+                "server",
                 new NoOpSimpleProtocolHandler());
-        
+
         final DefaultListeningIOReactor ioreactor = new DefaultListeningIOReactor(
                 new IOReactorConfig());
         ioreactor.setExceptionHandler(new IOReactorExceptionHandler() {
@@ -468,22 +468,22 @@ public class TestIOReactors {
             public boolean handle(final RuntimeException ex) {
                 return false;
             }
-            
+
         });
-        
+
         Thread t = new Thread(new Runnable() {
-            
+
             public void run() {
                 try {
                     ioreactor.execute(eventDispatch);
                 } catch (IOException ex) {
                 }
             }
-            
+
         });
-        
+
         t.start();
-        
+
         ListenerEndpoint endpoint1 = ioreactor.listen(new InetSocketAddress(9999));
         endpoint1.waitFor();
 
@@ -493,12 +493,12 @@ public class TestIOReactors {
 
         // Sleep a little to make sure the I/O reactor is not shutting down
         Thread.sleep(500);
-        
+
         Assert.assertEquals(IOReactorStatus.ACTIVE, ioreactor.getStatus());
-        
+
         ioreactor.shutdown(1000);
         t.join(1000);
-        
+
         Assert.assertEquals(IOReactorStatus.SHUT_DOWN, ioreactor.getStatus());
     }
 
