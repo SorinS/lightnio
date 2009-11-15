@@ -16,7 +16,6 @@ package com.ok2c.lightnio.concurrent;
 
 import java.nio.channels.IllegalSelectorException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -34,14 +33,14 @@ public class TestBasicFuture {
         private volatile boolean failed;
         private volatile boolean cancelled;
 
-        public void completed(final Future<T> future) {
+        public void completed(final T result) {
             if (this.completed) {
                 return;
             }
             this.completed = true;
         }
 
-        public void cancelled(final Future<T> future) {
+        public void cancelled() {
             if (this.completed) {
                 return;
             }
@@ -49,7 +48,7 @@ public class TestBasicFuture {
             this.cancelled = true;
         }
 
-        public void failed(final Future<T> future) {
+        public void failed(final Exception ex) {
             if (this.completed) {
                 return;
             }
