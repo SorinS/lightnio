@@ -29,67 +29,67 @@ import com.ok2c.lightnio.impl.SessionOutputBufferImpl;
  */
 public class SimpleTestState implements SessionBufferStatus {
 
-	private static final int INIT_BUFFER_SIZE = 8 * 1024;
-	private static final int LINE_BUFFER_SIZE = 1 * 1024;
-	private static final Charset ASCII = Charset.forName("ASCII");
-	
-	private final SessionInputBuffer inbuf;
-	private final SessionOutputBuffer outbuf;
-	
-	private SimpleTestStatus status;
-	
-	public SimpleTestState(final ByteBufferAllocator allocator) {
-		super();
-		this.inbuf = new SessionInputBufferImpl(
-				INIT_BUFFER_SIZE, 
-				LINE_BUFFER_SIZE,
-				allocator,
-				ASCII);
-		this.outbuf = new SessionOutputBufferImpl(
-				INIT_BUFFER_SIZE, 
-				LINE_BUFFER_SIZE,
-				allocator,
-				ASCII);
-		this.status = SimpleTestStatus.IDLE;
-	}
+    private static final int INIT_BUFFER_SIZE = 8 * 1024;
+    private static final int LINE_BUFFER_SIZE = 1 * 1024;
+    private static final Charset ASCII = Charset.forName("ASCII");
+    
+    private final SessionInputBuffer inbuf;
+    private final SessionOutputBuffer outbuf;
+    
+    private SimpleTestStatus status;
+    
+    public SimpleTestState(final ByteBufferAllocator allocator) {
+        super();
+        this.inbuf = new SessionInputBufferImpl(
+                INIT_BUFFER_SIZE, 
+                LINE_BUFFER_SIZE,
+                allocator,
+                ASCII);
+        this.outbuf = new SessionOutputBufferImpl(
+                INIT_BUFFER_SIZE, 
+                LINE_BUFFER_SIZE,
+                allocator,
+                ASCII);
+        this.status = SimpleTestStatus.IDLE;
+    }
 
-	public SessionInputBuffer getInBuffer() {
-		return this.inbuf;
-	}
+    public SessionInputBuffer getInBuffer() {
+        return this.inbuf;
+    }
 
-	public SessionOutputBuffer getOutBuffer() {
-		return this.outbuf;
-	}
+    public SessionOutputBuffer getOutBuffer() {
+        return this.outbuf;
+    }
 
-	public boolean hasBufferedInput() {
-		return this.inbuf.hasData();
-	}
+    public boolean hasBufferedInput() {
+        return this.inbuf.hasData();
+    }
 
-	public boolean hasBufferedOutput() {
-		return this.outbuf.hasData();
-	}
+    public boolean hasBufferedOutput() {
+        return this.outbuf.hasData();
+    }
 
-	public SimpleTestStatus getStatus() {
-		return this.status;
-	}
+    public SimpleTestStatus getStatus() {
+        return this.status;
+    }
 
-	public void setStatus(final SimpleTestStatus status) {
-		this.status = status;
-	}
+    public void setStatus(final SimpleTestStatus status) {
+        this.status = status;
+    }
 
-	@Override
-	public String toString() {
-		StringBuilder buffer = new StringBuilder();
-		buffer.append("[state: ");
-		buffer.append(this.status);
-		buffer.append("]");
-		buffer.append("[in buffer: ");
-		buffer.append(this.inbuf.length());
-		buffer.append("]");
-		buffer.append("[out buffer: ");
-		buffer.append(this.outbuf.length());
-		buffer.append("]");
-		return buffer.toString();
-	}
-	
+    @Override
+    public String toString() {
+        StringBuilder buffer = new StringBuilder();
+        buffer.append("[state: ");
+        buffer.append(this.status);
+        buffer.append("]");
+        buffer.append("[in buffer: ");
+        buffer.append(this.inbuf.length());
+        buffer.append("]");
+        buffer.append("[out buffer: ");
+        buffer.append(this.outbuf.length());
+        buffer.append("]");
+        return buffer.toString();
+    }
+    
 }

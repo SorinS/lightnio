@@ -111,7 +111,7 @@ class SessionPoolForRoute<T> {
     }
 
     private PoolEntryCallback<T> removeRequest(final SessionRequest request) {
-    	PoolEntryCallback<T> callback = this.pendingSessions.remove(request);
+        PoolEntryCallback<T> callback = this.pendingSessions.remove(request);
         if (callback == null) {
             throw new IllegalStateException("Invalid session request");
         }
@@ -119,7 +119,7 @@ class SessionPoolForRoute<T> {
     }
 
     public PoolEntry<T> completed(final SessionRequest request) {
-    	PoolEntryCallback<T> callback = removeRequest(request);
+        PoolEntryCallback<T> callback = removeRequest(request);
         IOSession iosession = request.getSession();
         PoolEntry<T> entry = new PoolEntry<T>(this.route, iosession);
         this.leasedSessions.add(entry);
@@ -128,23 +128,23 @@ class SessionPoolForRoute<T> {
     }
 
     public void cancelled(final SessionRequest request) {
-    	PoolEntryCallback<T> callback = removeRequest(request);
-    	callback.cancelled();
+        PoolEntryCallback<T> callback = removeRequest(request);
+        callback.cancelled();
     }
 
     public void failed(final SessionRequest request) {
-    	PoolEntryCallback<T> callback = removeRequest(request);
-    	callback.failed(request.getException());
+        PoolEntryCallback<T> callback = removeRequest(request);
+        callback.failed(request.getException());
     }
 
     public void timeout(final SessionRequest request) {
-    	PoolEntryCallback<T> callback = removeRequest(request);
-    	callback.failed(new SocketTimeoutException());
+        PoolEntryCallback<T> callback = removeRequest(request);
+        callback.failed(new SocketTimeoutException());
     }
 
     public void shutdown() {
         for (SessionRequest sessionRequest: this.pendingSessions.keySet()) {
-        	sessionRequest.cancel();
+            sessionRequest.cancel();
         }
         this.pendingSessions.clear();
         for (PoolEntry<T> entry: this.availableSessions) {

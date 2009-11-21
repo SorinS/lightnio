@@ -46,20 +46,20 @@ import com.ok2c.lightnio.testprotocol.SimpleTestStatus;
  * Unit tests for {@link DefaultConnectingIOReactor} and {@link DefaultListeningIOReactor}.
  */
 public class TestSSLIOReactors {
-	
-	private SimpleSSLClient testclient;
-	private SimpleSSLServer testserver;
-	
-	@Before
-	public void setUp() throws Exception {
-		IOReactorConfig config = new IOReactorConfig();
-		config.setWorkerCount(2);
-		this.testclient = new SimpleSSLClient(config);
-		this.testserver = new SimpleSSLServer(config);
-	}
-	
-	@After
-	public void tearDown() throws Exception {
+    
+    private SimpleSSLClient testclient;
+    private SimpleSSLServer testserver;
+    
+    @Before
+    public void setUp() throws Exception {
+        IOReactorConfig config = new IOReactorConfig();
+        config.setWorkerCount(2);
+        this.testclient = new SimpleSSLClient(config);
+        this.testserver = new SimpleSSLServer(config);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
         try {
             this.testclient.shutdown();
         } catch (IOException ex) {
@@ -89,58 +89,58 @@ public class TestSSLIOReactors {
                 }
             }
         }
-	}
+    }
 
-	@Test
-	public void testBasicIO() throws Exception {
-		this.testserver.start(new SimpleServerProtocolHandler());
-		this.testclient.start(new SimpleClientProtocolHandler());
-		
-		ListenerEndpoint listenerEndpoint = this.testserver.getListenerEndpoint();
-		listenerEndpoint.waitFor();
-		
+    @Test
+    public void testBasicIO() throws Exception {
+        this.testserver.start(new SimpleServerProtocolHandler());
+        this.testclient.start(new SimpleClientProtocolHandler());
+        
+        ListenerEndpoint listenerEndpoint = this.testserver.getListenerEndpoint();
+        listenerEndpoint.waitFor();
+        
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.testserver.getStatus());
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.testclient.getStatus());
-		
-		InetSocketAddress address = (InetSocketAddress) listenerEndpoint.getAddress();
+        
+        InetSocketAddress address = (InetSocketAddress) listenerEndpoint.getAddress();
         InetSocketAddress target = new InetSocketAddress("localhost", address.getPort());
-		
-		SimpleTestJob[] testjobs = new SimpleTestJob[50];
-		for (int i = 0; i < testjobs.length; i++) {
-			testjobs[i] = new SimpleTestJob(1000);
-		}
-		for (int i = 0; i < testjobs.length; i++) {
-			SimpleTestJob testjob = testjobs[i];
-			SessionRequest sessionRequest = this.testclient.openConnection(target, testjob);
-			sessionRequest.waitFor();
-			if (sessionRequest.getException() != null) {
-			    throw sessionRequest.getException();
-			}
-			Assert.assertNotNull(sessionRequest.getSession());
-		}
-		for (int i = 0; i < testjobs.length; i++) {
-			SimpleTestJob testjob = testjobs[i];
-			testjob.waitFor();
-			Exception ex = testjob.getException();
-			if (ex != null) {
-				throw ex;
-			}
-			SimpleTestState state = testjob.getTestState();
-			Assert.assertNotNull(state);
-			Assert.assertEquals(SimpleTestStatus.RESPONSE_RECEIVED, state.getStatus());
-			
-			String pattern = testjob.getPattern();
-			int count = testjob.getCount();
-			SessionInputBuffer inbuffer = state.getInBuffer();
-			
-			for (int n = 0; n < count; n++) {
-				String line = inbuffer.readLine(true);
+        
+        SimpleTestJob[] testjobs = new SimpleTestJob[50];
+        for (int i = 0; i < testjobs.length; i++) {
+            testjobs[i] = new SimpleTestJob(1000);
+        }
+        for (int i = 0; i < testjobs.length; i++) {
+            SimpleTestJob testjob = testjobs[i];
+            SessionRequest sessionRequest = this.testclient.openConnection(target, testjob);
+            sessionRequest.waitFor();
+            if (sessionRequest.getException() != null) {
+                throw sessionRequest.getException();
+            }
+            Assert.assertNotNull(sessionRequest.getSession());
+        }
+        for (int i = 0; i < testjobs.length; i++) {
+            SimpleTestJob testjob = testjobs[i];
+            testjob.waitFor();
+            Exception ex = testjob.getException();
+            if (ex != null) {
+                throw ex;
+            }
+            SimpleTestState state = testjob.getTestState();
+            Assert.assertNotNull(state);
+            Assert.assertEquals(SimpleTestStatus.RESPONSE_RECEIVED, state.getStatus());
+            
+            String pattern = testjob.getPattern();
+            int count = testjob.getCount();
+            SessionInputBuffer inbuffer = state.getInBuffer();
+            
+            for (int n = 0; n < count; n++) {
+                String line = inbuffer.readLine(true);
                 Assert.assertEquals(pattern, line);
-			}
-			Assert.assertFalse(inbuffer.hasData());
-		}
-	}
-	
+            }
+            Assert.assertFalse(inbuffer.hasData());
+        }
+    }
+    
     @Test
     public void testGracefulShutdown() throws Exception {
         // Open connections and do nothing

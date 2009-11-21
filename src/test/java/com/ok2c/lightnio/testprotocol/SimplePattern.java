@@ -16,36 +16,36 @@ package com.ok2c.lightnio.testprotocol;
 
 public class SimplePattern {
 
-	private final String text;
-	private final int count;
-	
-	public SimplePattern(final String text, int count) {
-		super();
-		if (text == null || text.length() == 0) {
-			throw new IllegalArgumentException("Text may not be null or empty");
-		}
-		if (count < 0) {
-			throw new IllegalArgumentException("Count may not be negative");
-		}
-		this.text = text;
-		this.count = count;
-	}
+    private final String text;
+    private final int count;
+    
+    public SimplePattern(final String text, int count) {
+        super();
+        if (text == null || text.length() == 0) {
+            throw new IllegalArgumentException("Text may not be null or empty");
+        }
+        if (count < 0) {
+            throw new IllegalArgumentException("Count may not be negative");
+        }
+        this.text = text;
+        this.count = count;
+    }
 
-	public String getText() {
-		return this.text;
-	}
+    public String getText() {
+        return this.text;
+    }
 
-	public int getCount() {
-		return this.count;
-	}
+    public int getCount() {
+        return this.count;
+    }
 
-	@Override
-	public String toString() {
-		StringBuilder buffer = new StringBuilder();
-		buffer.append(this.text);
-		buffer.append('x');
-		buffer.append(this.count);
-		return buffer.toString();
-	}
-	
+    @Override
+    public String toString() {
+        StringBuilder buffer = new StringBuilder();
+        buffer.append(this.text);
+        buffer.append('x');
+        buffer.append(this.count);
+        return buffer.toString();
+    }
+    
 }

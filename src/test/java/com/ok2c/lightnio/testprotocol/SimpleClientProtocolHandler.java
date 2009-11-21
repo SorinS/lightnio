@@ -24,77 +24,77 @@ import com.ok2c.lightnio.SessionOutputBuffer;
 public class SimpleClientProtocolHandler implements SimpleProtocolHandler {
 
     public void connected(
-    		final IOSession session, 
-    		final SimpleTestState state) {
-    	SimpleTestJob job = (SimpleTestJob) session.getAttribute(IOSession.ATTACHMENT_KEY);
-    	if (job == null) {
-    		throw new IllegalStateException("Test job is null");
-    	}
-    	session.setAttribute("pattern", new SimplePattern(job.getPattern(), job.getCount()));
-    	session.setEventMask(SelectionKey.OP_WRITE);
+            final IOSession session, 
+            final SimpleTestState state) {
+        SimpleTestJob job = (SimpleTestJob) session.getAttribute(IOSession.ATTACHMENT_KEY);
+        if (job == null) {
+            throw new IllegalStateException("Test job is null");
+        }
+        session.setAttribute("pattern", new SimplePattern(job.getPattern(), job.getCount()));
+        session.setEventMask(SelectionKey.OP_WRITE);
     }
 
     public void outputReady(
-    		final IOSession session, 
-    		final SimpleTestState state) throws IOException {
-    	SessionOutputBuffer outbuf = state.getOutBuffer();
-    	switch (state.getStatus()) {
-    	case IDLE:
-        	SimplePattern pattern = (SimplePattern) session.getAttribute("pattern");
-        	outbuf.writeLine(pattern.toString());
-        	state.setStatus(SimpleTestStatus.REQUEST_SENDING);
-    	case REQUEST_SENDING:
-    		outbuf.flush(session.channel());
-    		if (!outbuf.hasData()) {
-            	state.setStatus(SimpleTestStatus.REQUEST_SENT);
-    		}
-    	case REQUEST_SENT:
-        	session.setEventMask(SelectionKey.OP_READ);
-        	break;
-    	default:
-    		throw new IllegalStateException("Unexpected state: " + state.getStatus());
-    	}
+            final IOSession session, 
+            final SimpleTestState state) throws IOException {
+        SessionOutputBuffer outbuf = state.getOutBuffer();
+        switch (state.getStatus()) {
+        case IDLE:
+            SimplePattern pattern = (SimplePattern) session.getAttribute("pattern");
+            outbuf.writeLine(pattern.toString());
+            state.setStatus(SimpleTestStatus.REQUEST_SENDING);
+        case REQUEST_SENDING:
+            outbuf.flush(session.channel());
+            if (!outbuf.hasData()) {
+                state.setStatus(SimpleTestStatus.REQUEST_SENT);
+            }
+        case REQUEST_SENT:
+            session.setEventMask(SelectionKey.OP_READ);
+            break;
+        default:
+            throw new IllegalStateException("Unexpected state: " + state.getStatus());
+        }
     }
 
     public void inputReady(
-    		final IOSession session, 
-    		final SimpleTestState state) throws IOException {
-    	SessionInputBuffer inbuf = state.getInBuffer();
-    	switch (state.getStatus()) {
-    	case REQUEST_SENT:
-        	state.setStatus(SimpleTestStatus.RESPONSE_RECEIVING);
-    	case RESPONSE_RECEIVING:
-    		int bytesRead = inbuf.fill(session.channel());
-    		if (bytesRead == -1) {
-    	    	state.setStatus(SimpleTestStatus.RESPONSE_RECEIVED);
-    	    	session.close();
-    		}
-        	break;
-    	default:
-    		throw new IllegalStateException("Unexpected state: " + state.getStatus());
-    	}
+            final IOSession session, 
+            final SimpleTestState state) throws IOException {
+        SessionInputBuffer inbuf = state.getInBuffer();
+        switch (state.getStatus()) {
+        case REQUEST_SENT:
+            state.setStatus(SimpleTestStatus.RESPONSE_RECEIVING);
+        case RESPONSE_RECEIVING:
+            int bytesRead = inbuf.fill(session.channel());
+            if (bytesRead == -1) {
+                state.setStatus(SimpleTestStatus.RESPONSE_RECEIVED);
+                session.close();
+            }
+            break;
+        default:
+            throw new IllegalStateException("Unexpected state: " + state.getStatus());
+        }
     }
 
     public void disconnected(
-    		final IOSession session, 
-    		final SimpleTestState state) {
-    	SimpleTestJob job = (SimpleTestJob) session.getAttribute(IOSession.ATTACHMENT_KEY);
-    	if (job == null) {
-    		throw new IllegalStateException("Test job is null");
-    	}
-    	if (state.getStatus().equals(SimpleTestStatus.RESPONSE_RECEIVING)) {
-        	state.setStatus(SimpleTestStatus.RESPONSE_RECEIVED);
-    	}
-		job.success(state);
+            final IOSession session, 
+            final SimpleTestState state) {
+        SimpleTestJob job = (SimpleTestJob) session.getAttribute(IOSession.ATTACHMENT_KEY);
+        if (job == null) {
+            throw new IllegalStateException("Test job is null");
+        }
+        if (state.getStatus().equals(SimpleTestStatus.RESPONSE_RECEIVING)) {
+            state.setStatus(SimpleTestStatus.RESPONSE_RECEIVED);
+        }
+        job.success(state);
     }
 
-	public void exception(final IOSession session, final SimpleTestState state, final Exception ex) {
-    	SimpleTestJob job = (SimpleTestJob) session.getAttribute(IOSession.ATTACHMENT_KEY);
-    	if (job == null) {
-    		throw new IllegalStateException("Test job is null");
-    	}
-		state.setStatus(SimpleTestStatus.FAILURE);
-		job.failure(state, ex);
-	}
+    public void exception(final IOSession session, final SimpleTestState state, final Exception ex) {
+        SimpleTestJob job = (SimpleTestJob) session.getAttribute(IOSession.ATTACHMENT_KEY);
+        if (job == null) {
+            throw new IllegalStateException("Test job is null");
+        }
+        state.setStatus(SimpleTestStatus.FAILURE);
+        job.failure(state, ex);
+    }
     
 }

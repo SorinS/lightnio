@@ -64,29 +64,29 @@ public class BasicIOSessionManager implements IOSessionManager<SocketAddress> {
     
     static class InternalPoolEntryCallback implements PoolEntryCallback<SocketAddress> {
 
-    	private final SessionPool<SocketAddress> pool;
-    	private final BasicFuture<ManagedIOSession> future;
-    	
-    	public InternalPoolEntryCallback(
-    			final SessionPool<SocketAddress> pool,
-    			final BasicFuture<ManagedIOSession> future) {
-    		super();
-    		this.pool = pool;
-    		this.future = future;
-    	}
-    	
-		public void completed(final PoolEntry<SocketAddress> entry) {
-			ManagedIOSession result = new BasicManagedIOSession(this.pool, entry);
-			this.future.completed(result);
-		}
+        private final SessionPool<SocketAddress> pool;
+        private final BasicFuture<ManagedIOSession> future;
+        
+        public InternalPoolEntryCallback(
+                final SessionPool<SocketAddress> pool,
+                final BasicFuture<ManagedIOSession> future) {
+            super();
+            this.pool = pool;
+            this.future = future;
+        }
+        
+        public void completed(final PoolEntry<SocketAddress> entry) {
+            ManagedIOSession result = new BasicManagedIOSession(this.pool, entry);
+            this.future.completed(result);
+        }
 
-		public void failed(final Exception ex) {
-			this.future.failed(ex);
-		}
+        public void failed(final Exception ex) {
+            this.future.failed(ex);
+        }
 
-		public void cancelled() {
-			this.future.cancel(true);
-		}
+        public void cancelled() {
+            this.future.cancel(true);
+        }
 
     }
 

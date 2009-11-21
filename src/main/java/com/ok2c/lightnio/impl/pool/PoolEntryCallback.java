@@ -16,10 +16,10 @@ package com.ok2c.lightnio.impl.pool;
 
 public interface PoolEntryCallback<T> {
 
-	void completed(PoolEntry<T> entry);
-	
-	void failed(Exception ex);
-	
-	void cancelled();
-	
+    void completed(PoolEntry<T> entry);
+    
+    void failed(Exception ex);
+    
+    void cancelled();
+    
 }

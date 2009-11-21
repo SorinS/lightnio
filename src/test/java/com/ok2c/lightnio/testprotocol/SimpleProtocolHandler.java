@@ -21,16 +21,16 @@ import com.ok2c.lightnio.IOSession;
 public interface SimpleProtocolHandler {
 
     void connected(IOSession session, SimpleTestState state) 
-    	throws IOException;
+        throws IOException;
 
     void inputReady(IOSession session, SimpleTestState state)
-    	throws IOException;
+        throws IOException;
 
     void outputReady(IOSession session, SimpleTestState state)
-    	throws IOException;
+        throws IOException;
 
     void disconnected(IOSession session, SimpleTestState state)
-    	throws IOException;
+        throws IOException;
     
     void exception(IOSession session, SimpleTestState state, Exception ex);
 
