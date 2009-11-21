@@ -18,6 +18,8 @@ import com.ok2c.lightnio.IOSession;
 
 public class PoolEntry<T> {
 
+    public static final String ATTRIB = "com.ok2c.lightnio.pool-entry";
+
     private final T route;
     private final IOSession session;
     private Object state;

@@ -18,6 +18,7 @@ import java.net.SocketAddress;
 import java.util.concurrent.Future;
 
 import com.ok2c.lightnio.ConnectingIOReactor;
+import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.concurrent.BasicFuture;
 import com.ok2c.lightnio.concurrent.FutureCallback;
 import com.ok2c.lightnio.pool.IOSessionManager;
@@ -44,6 +45,15 @@ public class BasicIOSessionManager implements IOSessionManager<SocketAddress> {
 
     public synchronized void releaseSession(final ManagedIOSession session) {
         session.releaseSession();
+    }
+
+    public synchronized void removeExpired(final IOSession iosession) {
+        @SuppressWarnings("unchecked")
+        PoolEntry<SocketAddress> entry = (PoolEntry<SocketAddress>) iosession.getAttribute(
+                PoolEntry.ATTRIB);
+        if (entry != null) {
+            this.pool.release(entry, false);
+        }
     }
 
     public synchronized void shutdown() {

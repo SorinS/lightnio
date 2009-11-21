@@ -16,6 +16,7 @@ package com.ok2c.lightnio.pool;
 
 import java.util.concurrent.Future;
 
+import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.concurrent.FutureCallback;
 
 public interface IOSessionManager<T> {
@@ -24,6 +25,8 @@ public interface IOSessionManager<T> {
             T route, Object state, FutureCallback<ManagedIOSession> callback);
 
     void releaseSession(ManagedIOSession session);
+
+    void removeExpired(IOSession iosession);
 
     void shutdown();
 

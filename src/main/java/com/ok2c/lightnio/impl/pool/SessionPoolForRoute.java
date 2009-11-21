@@ -53,7 +53,8 @@ class SessionPoolForRoute<T> {
     }
 
     public int getAllocatedCount() {
-        return this.availableSessions.size() + this.leasedSessions.size() + this.pendingSessions.size();
+        return this.availableSessions.size() +
+            this.leasedSessions.size() + this.pendingSessions.size();
     }
 
     public PoolEntry<T> getFreeEntry(final Object state) {
@@ -85,6 +86,7 @@ class SessionPoolForRoute<T> {
         if (entry == null) {
             throw new IllegalArgumentException("Pool entry may not be null");
         }
+        entry.getIOSession().removeAttribute(PoolEntry.ATTRIB);
         boolean foundLeased = this.leasedSessions.remove(entry);
         boolean foundFree = this.availableSessions.remove(entry);
         return foundLeased || foundFree;
