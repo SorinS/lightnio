@@ -86,7 +86,6 @@ class SessionPoolForRoute<T> {
         if (entry == null) {
             throw new IllegalArgumentException("Pool entry may not be null");
         }
-        entry.getIOSession().removeAttribute(PoolEntry.ATTRIB);
         boolean foundLeased = this.leasedSessions.remove(entry);
         boolean foundFree = this.availableSessions.remove(entry);
         return foundLeased || foundFree;
@@ -103,6 +102,8 @@ class SessionPoolForRoute<T> {
         }
         if (reusable) {
             this.availableSessions.add(entry);
+        } else {
+            entry.reset();
         }
     }
 

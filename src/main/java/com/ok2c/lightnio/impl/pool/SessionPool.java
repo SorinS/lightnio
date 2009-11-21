@@ -136,6 +136,22 @@ public class SessionPool<T> {
         }
     }
 
+    public void remove(final PoolEntry<T> entry) {
+        if (this.isShutDown) {
+            return;
+        }
+        this.lock.lock();
+        try {
+            this.leasedSessions.remove(entry);
+            SessionPoolForRoute<T> pool = getPool(entry.getRoute());
+            if (pool.remove(entry)) {
+                processPendingRequests();
+            }
+        } finally {
+            this.lock.unlock();
+        }
+    }
+
     private int getAllocatedTotal() {
         return this.leasedSessions.size() +
             this.pendingSessions.size() +

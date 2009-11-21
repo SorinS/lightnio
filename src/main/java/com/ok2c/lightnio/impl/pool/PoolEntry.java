@@ -14,12 +14,16 @@
  */
 package com.ok2c.lightnio.impl.pool;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import com.ok2c.lightnio.IOSession;
 
 public class PoolEntry<T> {
 
     public static final String ATTRIB = "com.ok2c.lightnio.pool-entry";
-
+    private static AtomicLong COUNTER = new AtomicLong(); 
+    
+    private final long id;
     private final T route;
     private final IOSession session;
     private Object state;
@@ -28,6 +32,8 @@ public class PoolEntry<T> {
         super();
         this.route = route;
         this.session = session;
+        this.session.setAttribute(ATTRIB, this);
+        this.id = COUNTER.incrementAndGet();
     }
 
     public T getRoute() {
@@ -45,4 +51,21 @@ public class PoolEntry<T> {
         this.state = state;
     }
 
+    public void reset() {
+        this.session.removeAttribute(ATTRIB);
+    }
+    
+    @Override
+    public String toString() {
+        StringBuilder buffer = new StringBuilder();
+        buffer.append("[id:");
+        buffer.append(this.id);
+        buffer.append("][route:");
+        buffer.append(this.route);
+        buffer.append("][state:");
+        buffer.append(this.state);
+        buffer.append("]");
+        return buffer.toString();
+    }
+    
 }

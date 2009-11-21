@@ -52,7 +52,7 @@ public class BasicIOSessionManager implements IOSessionManager<SocketAddress> {
         PoolEntry<SocketAddress> entry = (PoolEntry<SocketAddress>) iosession.getAttribute(
                 PoolEntry.ATTRIB);
         if (entry != null) {
-            this.pool.release(entry, false);
+            this.pool.remove(entry);
         }
     }
 
