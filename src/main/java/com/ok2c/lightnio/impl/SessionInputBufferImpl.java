@@ -163,7 +163,7 @@ public class SessionInputBufferImpl extends ExpandableBuffer implements SessionI
                     this.buffer,
                     this.charbuffer,
                     true);
-            if (result.isError()) {
+            if (result.isMalformed()) {
                 result.throwException();
             }
             if (result.isOverflow()) {
