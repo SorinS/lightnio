@@ -39,8 +39,8 @@ public class SessionOutputBufferImpl extends ExpandableBuffer implements Session
 
     private static final byte[] CRLF = new byte[] {TextConsts.CR, TextConsts.LF};
 
-    private CharBuffer charbuffer = null;
-    private CharsetEncoder charencoder = null;
+    private final CharBuffer charbuffer;
+    private CharsetEncoder charencoder;
 
     public SessionOutputBufferImpl(
             int buffersize,
@@ -62,6 +62,15 @@ public class SessionOutputBufferImpl extends ExpandableBuffer implements Session
         this(buffersize, linebuffersize, new HeapByteBufferAllocator(), charset);
     }
 
+    public void resetCharset(final Charset charset) {
+        if (charset == null) {
+            throw new IllegalArgumentException("Charset may not be null");
+        }
+        if (!this.charencoder.charset().equals(charset)) {
+            this.charencoder = charset.newEncoder();
+        }
+    }
+    
     public int flush(final WritableByteChannel channel) throws IOException {
         if (channel == null) {
             throw new IllegalArgumentException("Channel may not be null");

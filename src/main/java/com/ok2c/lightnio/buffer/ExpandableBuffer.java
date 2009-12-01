@@ -26,9 +26,10 @@ public class ExpandableBuffer {
     public final static int INPUT_MODE = 0;
     public final static int OUTPUT_MODE = 1;
 
-    private int mode;
-    protected ByteBuffer buffer = null;
     private final ByteBufferAllocator allocator;
+    private int mode;
+    
+    protected ByteBuffer buffer = null;
 
     /**
      * Allocates buffer of the given size using the given allocator.

@@ -37,8 +37,8 @@ import com.ok2c.lightnio.buffer.HeapByteBufferAllocator;
  */
 public class SessionInputBufferImpl extends ExpandableBuffer implements SessionInputBuffer {
 
-    private CharBuffer charbuffer = null;
-    private CharsetDecoder chardecoder = null;
+    private final CharBuffer charbuffer;
+    private CharsetDecoder chardecoder;
 
     public SessionInputBufferImpl(
             int buffersize,
@@ -60,6 +60,15 @@ public class SessionInputBufferImpl extends ExpandableBuffer implements SessionI
         this(buffersize, linebuffersize, new HeapByteBufferAllocator(), charset);
     }
 
+    public void resetCharset(final Charset charset) {
+        if (charset == null) {
+            throw new IllegalArgumentException("Charset may not be null");
+        }
+        if (!this.chardecoder.charset().equals(charset)) {
+            this.chardecoder = charset.newDecoder();
+        }
+    }
+    
     public int fill(final ReadableByteChannel channel) throws IOException {
         if (channel == null) {
             throw new IllegalArgumentException("Channel may not be null");
@@ -163,7 +172,7 @@ public class SessionInputBufferImpl extends ExpandableBuffer implements SessionI
                     this.buffer,
                     this.charbuffer,
                     true);
-            if (result.isMalformed()) {
+            if (result.isError()) {
                 result.throwException();
             }
             if (result.isOverflow()) {
