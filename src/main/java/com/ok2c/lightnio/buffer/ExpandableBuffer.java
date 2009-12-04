@@ -156,7 +156,7 @@ public class ExpandableBuffer {
     /**
      * Clears buffer.
      */
-    protected void clear() {
+    public void clear() {
         this.buffer.clear();
         this.mode = INPUT_MODE;
     }
