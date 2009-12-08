@@ -100,7 +100,6 @@ public class TestSSLIOReactors {
         listenerEndpoint.waitFor();
         
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.testserver.getStatus());
-        Assert.assertEquals(IOReactorStatus.ACTIVE, this.testclient.getStatus());
         
         InetSocketAddress address = (InetSocketAddress) listenerEndpoint.getAddress();
         InetSocketAddress target = new InetSocketAddress("localhost", address.getPort());
@@ -181,7 +180,6 @@ public class TestSSLIOReactors {
         listenerEndpoint.waitFor();
         
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.testserver.getStatus());
-        Assert.assertEquals(IOReactorStatus.ACTIVE, this.testclient.getStatus());
         
         InetSocketAddress address = (InetSocketAddress) listenerEndpoint.getAddress();
         InetSocketAddress target = new InetSocketAddress("localhost", address.getPort());
