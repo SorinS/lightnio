@@ -19,7 +19,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import junit.framework.Assert;
 
@@ -144,14 +144,14 @@ public class TestSSLIOReactors {
     public void testGracefulShutdown() throws Exception {
         // Open connections and do nothing
         final int connNo = 10;
-        final CountDownLatch closedServerConns = new CountDownLatch(connNo); 
-        final CountDownLatch closedClientConns = new CountDownLatch(connNo); 
+        final AtomicInteger closedServerConns = new AtomicInteger(0); 
+        final AtomicInteger closedClientConns = new AtomicInteger(0); 
 
         this.testserver.start(new NoOpSimpleProtocolHandler() {
 
             @Override
             public void disconnected(IOSession session, SimpleTestState state) throws IOException {
-                closedServerConns.countDown();
+                closedServerConns.incrementAndGet();
             }
 
         });
@@ -171,7 +171,7 @@ public class TestSSLIOReactors {
 
             @Override
             public void disconnected(IOSession session, SimpleTestState state) throws IOException {
-                closedClientConns.countDown();
+                closedClientConns.incrementAndGet();
             }
 
         });
@@ -197,11 +197,8 @@ public class TestSSLIOReactors {
         this.testclient.shutdown(5000);
         this.testserver.shutdown(5000);
         
-        closedClientConns.await();
-        Assert.assertEquals(0, closedClientConns.getCount());
-     
-        closedServerConns.await();
-        Assert.assertEquals(0, closedServerConns.getCount());
+        Assert.assertEquals(connNo, closedClientConns.get());
+        Assert.assertEquals(connNo, closedServerConns.get());
     }
     
 }
