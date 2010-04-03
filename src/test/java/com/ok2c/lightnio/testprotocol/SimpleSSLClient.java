@@ -15,9 +15,14 @@
 package com.ok2c.lightnio.testprotocol;
 
 import java.net.InetSocketAddress;
+import java.net.URL;
+import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 
 import com.ok2c.lightnio.IOEventDispatch;
 import com.ok2c.lightnio.IOReactorExceptionHandler;
@@ -27,7 +32,7 @@ import com.ok2c.lightnio.impl.ExceptionEvent;
 import com.ok2c.lightnio.impl.IOReactorConfig;
 import com.ok2c.lightnio.impl.SSLMode;
 
-public class SimpleSSLClient extends AbstractSSLIOService<DefaultConnectingIOReactor> {
+public class SimpleSSLClient extends AbstractIOService<DefaultConnectingIOReactor> {
 
     private final SSLContext sslcontext;
 
@@ -37,7 +42,29 @@ public class SimpleSSLClient extends AbstractSSLIOService<DefaultConnectingIORea
                 new SimpleThreadFactory("SSL client")));
         this.sslcontext = createSSLContext();
     }
-    
+
+    private TrustManagerFactory createTrustManagerFactory() throws NoSuchAlgorithmException {
+        String algo = TrustManagerFactory.getDefaultAlgorithm();
+        try {
+            return TrustManagerFactory.getInstance(algo);
+        } catch (NoSuchAlgorithmException ex) {
+            return TrustManagerFactory.getInstance("SunX509");
+        }
+    }
+
+    protected SSLContext createSSLContext() throws Exception {
+        ClassLoader cl = getClass().getClassLoader();
+        URL url = cl.getResource("test.keystore");
+        KeyStore keystore = KeyStore.getInstance("jks");
+        keystore.load(url.openStream(), "nopassword".toCharArray());
+        TrustManagerFactory tmfactory = createTrustManagerFactory();
+        tmfactory.init(keystore);
+        TrustManager[] trustmanagers = tmfactory.getTrustManagers();
+        SSLContext sslcontext = SSLContext.getInstance("TLS");
+        sslcontext.init(null, trustmanagers, null);
+        return sslcontext;
+    }
+            
     @Override
     protected IOEventDispatch createIOEventDispatch(final SimpleProtocolHandler handler) {
         return new SimpleSSLIOEventDispatch(

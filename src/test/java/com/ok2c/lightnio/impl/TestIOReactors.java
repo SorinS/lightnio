@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import junit.framework.Assert;
 
@@ -149,20 +150,20 @@ public class TestIOReactors {
     public void testGracefulShutdown() throws Exception {
         // Open connections and do nothing
         final int connNo = 10;
-        final CountDownLatch closedServerConns = new CountDownLatch(connNo);
-        final CountDownLatch closedClientConns = new CountDownLatch(connNo);
+        final AtomicInteger closedServerConns = new AtomicInteger(0); 
+        final AtomicInteger closedClientConns = new AtomicInteger(0); 
 
         this.testserver.start(new NoOpSimpleProtocolHandler() {
 
             public void disconnected(IOSession session, SimpleTestState state) throws IOException {
-                closedServerConns.countDown();
+                closedServerConns.incrementAndGet();
             }
 
         });
         this.testclient.start(new NoOpSimpleProtocolHandler() {
 
             public void disconnected(IOSession session, SimpleTestState state) throws IOException {
-                closedClientConns.countDown();
+                closedClientConns.incrementAndGet();
             }
 
         });
@@ -186,11 +187,8 @@ public class TestIOReactors {
         this.testclient.shutdown(1000);
         this.testserver.shutdown(1000);
 
-        closedClientConns.await();
-        Assert.assertEquals(0, closedClientConns.getCount());
-
-        closedServerConns.await();
-        Assert.assertEquals(0, closedServerConns.getCount());
+        Assert.assertEquals(connNo, closedClientConns.get());
+        Assert.assertEquals(connNo, closedServerConns.get());
     }
 
     @Test

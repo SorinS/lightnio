@@ -15,8 +15,13 @@
 package com.ok2c.lightnio.testprotocol;
 
 import java.net.InetSocketAddress;
+import java.net.URL;
+import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 
 import com.ok2c.lightnio.IOEventDispatch;
@@ -27,7 +32,7 @@ import com.ok2c.lightnio.impl.ExceptionEvent;
 import com.ok2c.lightnio.impl.IOReactorConfig;
 import com.ok2c.lightnio.impl.SSLMode;
 
-public class SimpleSSLServer extends AbstractSSLIOService<DefaultListeningIOReactor>{
+public class SimpleSSLServer extends AbstractIOService<DefaultListeningIOReactor>{
 
     private final SSLContext sslcontext;
 
@@ -38,6 +43,28 @@ public class SimpleSSLServer extends AbstractSSLIOService<DefaultListeningIOReac
                 config, 
                 new SimpleThreadFactory("SSL server")));
         this.sslcontext = createSSLContext();
+    }
+
+    private KeyManagerFactory createKeyManagerFactory() throws NoSuchAlgorithmException {
+        String algo = KeyManagerFactory.getDefaultAlgorithm();
+        try {
+            return KeyManagerFactory.getInstance(algo);
+        } catch (NoSuchAlgorithmException ex) {
+            return KeyManagerFactory.getInstance("SunX509");
+        }
+    }
+    
+    protected SSLContext createSSLContext() throws Exception {
+        ClassLoader cl = getClass().getClassLoader();
+        URL url = cl.getResource("test.keystore");
+        KeyStore keystore  = KeyStore.getInstance("jks");
+        keystore.load(url.openStream(), "nopassword".toCharArray());
+        KeyManagerFactory kmfactory = createKeyManagerFactory();
+        kmfactory.init(keystore, "nopassword".toCharArray());
+        KeyManager[] keymanagers = kmfactory.getKeyManagers(); 
+        SSLContext sslcontext = SSLContext.getInstance("TLS");
+        sslcontext.init(keymanagers, null, null);
+        return sslcontext;
     }
 
     @Override
