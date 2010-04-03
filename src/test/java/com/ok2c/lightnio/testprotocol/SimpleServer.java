@@ -20,99 +20,42 @@ import java.util.List;
 
 import com.ok2c.lightnio.IOEventDispatch;
 import com.ok2c.lightnio.IOReactorExceptionHandler;
-import com.ok2c.lightnio.IOReactorStatus;
 import com.ok2c.lightnio.ListenerEndpoint;
 import com.ok2c.lightnio.impl.DefaultListeningIOReactor;
 import com.ok2c.lightnio.impl.ExceptionEvent;
 import com.ok2c.lightnio.impl.IOReactorConfig;
 
-public class SimpleServer {
+public class SimpleServer extends AbstractIOService<DefaultListeningIOReactor>{
 
-    private final DefaultListeningIOReactor ioReactor;
-
-    private volatile IOReactorThread thread;
     private ListenerEndpoint endpoint;
     
     public SimpleServer(IOReactorConfig config) throws IOException {
-        super();
-        this.ioReactor = new DefaultListeningIOReactor(
+        super(new DefaultListeningIOReactor(
                 config, 
-                new SimpleThreadFactory("Server"));
+                new SimpleThreadFactory("Server")));
+    }
+
+    @Override
+    protected IOEventDispatch createIOEventDispatch(final SimpleProtocolHandler handler) {
+        return new SimpleIOEventDispatch("server", handler);
     }
 
     public void setExceptionHandler(final IOReactorExceptionHandler exceptionHandler) {
-        this.ioReactor.setExceptionHandler(exceptionHandler);
+        getIOReactor().setExceptionHandler(exceptionHandler);
     }
 
-    private void execute(final SimpleProtocolHandler handler) throws IOException {
-        IOEventDispatch ioEventDispatch = new SimpleIOEventDispatch("Server", handler);
-        this.ioReactor.execute(ioEventDispatch);
-    }
-    
     public ListenerEndpoint getListenerEndpoint() {
         return this.endpoint;
     }
 
+    @Override
     public void start(final SimpleProtocolHandler handler) {
-        this.endpoint = this.ioReactor.listen(new InetSocketAddress(0));
-        this.thread = new IOReactorThread(handler);
-        this.thread.start();
-    }
-    
-    public IOReactorStatus getStatus() {
-        return this.ioReactor.getStatus();
+        this.endpoint = getIOReactor().listen(new InetSocketAddress(0));
+        super.start(handler);
     }
     
     public List<ExceptionEvent> getAuditLog() {
-        return this.ioReactor.getAuditLog();
+        return getIOReactor().getAuditLog();
     }
-    
-    public void join(long timeout) throws InterruptedException {
-        if (this.thread != null) {
-            this.thread.join(timeout);
-        }
-    }
-    
-    public Exception getException() {
-        if (this.thread != null) {
-            return this.thread.getException();
-        } else {
-            return null;
-        }
-    }
-    
-    public void shutdown() throws IOException {
-        this.ioReactor.shutdown();
-        try {
-            join(500);
-        } catch (InterruptedException ignore) {
-        }
-    }
-    
-    private class IOReactorThread extends Thread {
-
-        private final SimpleProtocolHandler handler;
-        
-        private volatile Exception ex;
-        
-        public IOReactorThread(final SimpleProtocolHandler handler) {
-            super();
-            this.handler = handler;
-        }
-        
-        @Override
-        public void run() {
-            try {
-                execute(this.handler);
-            } catch (Exception ex) {
-                this.ex = ex;
-            }
-        }
-        
-        public Exception getException() {
-            return this.ex;
-        }
-
-    }    
     
 }

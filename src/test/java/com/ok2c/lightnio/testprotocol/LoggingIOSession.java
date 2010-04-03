@@ -175,6 +175,11 @@ public class LoggingIOSession implements IOSession {
         }
         return this.session.removeAttribute(name);
     }
+    
+    @Override
+    public String toString() {
+        return "I/O session " + this.id;
+    }
 
     class LoggingByteChannel implements ByteChannel {
 

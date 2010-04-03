@@ -61,7 +61,7 @@ public class TestSSLIOReactors {
     @After
     public void tearDown() throws Exception {
         try {
-            this.testclient.shutdown();
+            this.testclient.shutdown(1000);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -76,7 +76,7 @@ public class TestSSLIOReactors {
         }
 
         try {
-            this.testserver.shutdown();
+            this.testserver.shutdown(1000);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -194,8 +194,8 @@ public class TestSSLIOReactors {
         }
 
         // Make sure all connections go down
-        this.testclient.shutdown();
-        this.testserver.shutdown();
+        this.testclient.shutdown(5000);
+        this.testserver.shutdown(5000);
         
         closedClientConns.await();
         Assert.assertEquals(0, closedClientConns.getCount());

@@ -68,7 +68,7 @@ public class TestIOReactors {
     @After
     public void tearDown() throws Exception {
         try {
-            this.testclient.shutdown();
+            this.testclient.shutdown(1000);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -83,7 +83,7 @@ public class TestIOReactors {
         }
 
         try {
-            this.testserver.shutdown();
+            this.testserver.shutdown(1000);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -183,8 +183,8 @@ public class TestIOReactors {
         }
 
         // Make sure all connections go down
-        this.testclient.shutdown();
-        this.testserver.shutdown();
+        this.testclient.shutdown(1000);
+        this.testserver.shutdown(1000);
 
         closedClientConns.await();
         Assert.assertEquals(0, closedClientConns.getCount());
