@@ -45,7 +45,9 @@ public class SimpleClientProtocolHandler implements SimpleProtocolHandler {
             state.setStatus(SimpleTestStatus.REQUEST_SENDING);
         case REQUEST_SENDING:
             outbuf.flush(session.channel());
-            if (!outbuf.hasData()) {
+            if (outbuf.hasData()) {
+                break;
+            } else {
                 state.setStatus(SimpleTestStatus.REQUEST_SENT);
             }
         case REQUEST_SENT:
