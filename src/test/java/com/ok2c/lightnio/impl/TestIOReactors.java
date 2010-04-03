@@ -17,6 +17,7 @@ package com.ok2c.lightnio.impl;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.util.List;
 import java.util.Set;
@@ -150,10 +151,17 @@ public class TestIOReactors {
     public void testGracefulShutdown() throws Exception {
         // Open connections and do nothing
         final int connNo = 10;
+        final AtomicInteger openServerConns = new AtomicInteger(0); 
         final AtomicInteger closedServerConns = new AtomicInteger(0); 
+        final AtomicInteger openClientConns = new AtomicInteger(0); 
         final AtomicInteger closedClientConns = new AtomicInteger(0); 
 
         this.testserver.start(new NoOpSimpleProtocolHandler() {
+
+            @Override
+            public void connected(IOSession session, SimpleTestState state) throws IOException {
+                openServerConns.incrementAndGet();
+            }
 
             public void disconnected(IOSession session, SimpleTestState state) throws IOException {
                 closedServerConns.incrementAndGet();
@@ -162,6 +170,20 @@ public class TestIOReactors {
         });
         this.testclient.start(new NoOpSimpleProtocolHandler() {
 
+            @Override
+            public void connected(IOSession session, SimpleTestState state) throws IOException {
+                openClientConns.incrementAndGet();
+                session.setEventMask(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+            }
+
+            @Override
+            public void outputReady(IOSession session, SimpleTestState state) throws IOException {
+                byte[] tmp = new byte[] {'1', '2', '3', '4', '5'};
+                ByteBuffer src = ByteBuffer.wrap(tmp);
+                session.channel().write(src);
+            }
+
+            @Override
             public void disconnected(IOSession session, SimpleTestState state) throws IOException {
                 closedClientConns.incrementAndGet();
             }
@@ -187,8 +209,8 @@ public class TestIOReactors {
         this.testclient.shutdown(1000);
         this.testserver.shutdown(1000);
 
-        Assert.assertEquals(connNo, closedClientConns.get());
-        Assert.assertEquals(connNo, closedServerConns.get());
+        Assert.assertEquals(openServerConns.get(), closedServerConns.get());
+        Assert.assertEquals(openClientConns.get(), closedClientConns.get());
     }
 
     @Test
@@ -239,7 +261,7 @@ public class TestIOReactors {
     @Test
     public void testUnhandledRuntimeException() throws Exception {
 
-        final CountDownLatch requestConns = new CountDownLatch(1);
+        final AtomicInteger requestConns = new AtomicInteger(0);
 
         this.testserver.setExceptionHandler(new IOReactorExceptionHandler() {
 
@@ -248,7 +270,7 @@ public class TestIOReactors {
             }
 
             public boolean handle(final RuntimeException ex) {
-                requestConns.countDown();
+                requestConns.incrementAndGet();
                 return false;
             }
 
@@ -281,10 +303,10 @@ public class TestIOReactors {
         }
         Assert.assertNotNull(sessionRequest.getSession());
 
-        requestConns.await();
-
         this.testserver.join(20000);
 
+        Assert.assertEquals(1, requestConns.get());
+        
         Exception ex = this.testserver.getException();
         Assert.assertNotNull(ex);
         Assert.assertTrue(ex instanceof IOReactorException);

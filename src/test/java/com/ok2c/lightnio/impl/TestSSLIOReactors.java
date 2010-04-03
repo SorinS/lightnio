@@ -144,10 +144,17 @@ public class TestSSLIOReactors {
     public void testGracefulShutdown() throws Exception {
         // Open connections and do nothing
         final int connNo = 10;
+        final AtomicInteger openServerConns = new AtomicInteger(0); 
         final AtomicInteger closedServerConns = new AtomicInteger(0); 
+        final AtomicInteger openClientConns = new AtomicInteger(0); 
         final AtomicInteger closedClientConns = new AtomicInteger(0); 
 
         this.testserver.start(new NoOpSimpleProtocolHandler() {
+
+            @Override
+            public void connected(IOSession session, SimpleTestState state) throws IOException {
+                openServerConns.incrementAndGet();
+            }
 
             @Override
             public void disconnected(IOSession session, SimpleTestState state) throws IOException {
@@ -159,6 +166,7 @@ public class TestSSLIOReactors {
 
             @Override
             public void connected(IOSession session, SimpleTestState state) throws IOException {
+                openClientConns.incrementAndGet();
                 session.setEventMask(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
             }
 
@@ -197,8 +205,8 @@ public class TestSSLIOReactors {
         this.testclient.shutdown(5000);
         this.testserver.shutdown(5000);
         
-        Assert.assertEquals(connNo, closedClientConns.get());
-        Assert.assertEquals(connNo, closedServerConns.get());
+        Assert.assertEquals(openServerConns.get(), closedServerConns.get());
+        Assert.assertEquals(openClientConns.get(), closedClientConns.get());
     }
     
 }
