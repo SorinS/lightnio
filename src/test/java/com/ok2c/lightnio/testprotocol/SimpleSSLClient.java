@@ -38,7 +38,7 @@ public class SimpleSSLClient extends AbstractIOService<DefaultConnectingIOReacto
 
     public SimpleSSLClient(final IOReactorConfig config) throws Exception {
         super(new DefaultConnectingIOReactor(
-                config, 
+                config,
                 new SimpleThreadFactory("SSL client")));
         this.sslcontext = createSSLContext();
     }
@@ -64,7 +64,7 @@ public class SimpleSSLClient extends AbstractIOService<DefaultConnectingIOReacto
         sslcontext.init(null, trustmanagers, null);
         return sslcontext;
     }
-            
+
     @Override
     protected IOEventDispatch createIOEventDispatch(final SimpleProtocolHandler handler) {
         return new SimpleSSLIOEventDispatch(
@@ -78,9 +78,9 @@ public class SimpleSSLClient extends AbstractIOService<DefaultConnectingIOReacto
     public SessionRequest openConnection(final InetSocketAddress address, final Object attachment) {
          return getIOReactor().connect(address, null, attachment, null);
     }
- 
+
     public List<ExceptionEvent> getAuditLog() {
         return getIOReactor().getAuditLog();
     }
-    
+
 }

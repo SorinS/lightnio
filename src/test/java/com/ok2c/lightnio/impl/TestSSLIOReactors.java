@@ -46,10 +46,10 @@ import com.ok2c.lightnio.testprotocol.SimpleTestStatus;
  * Unit tests for {@link DefaultConnectingIOReactor} and {@link DefaultListeningIOReactor}.
  */
 public class TestSSLIOReactors {
-    
+
     private SimpleSSLClient testclient;
     private SimpleSSLServer testserver;
-    
+
     @Before
     public void setUp() throws Exception {
         IOReactorConfig config = new IOReactorConfig();
@@ -57,7 +57,7 @@ public class TestSSLIOReactors {
         this.testclient = new SimpleSSLClient(config);
         this.testserver = new SimpleSSLServer(config);
     }
-    
+
     @After
     public void tearDown() throws Exception {
         try {
@@ -95,15 +95,15 @@ public class TestSSLIOReactors {
     public void testBasicIO() throws Exception {
         this.testserver.start(new SimpleServerProtocolHandler());
         this.testclient.start(new SimpleClientProtocolHandler());
-        
+
         ListenerEndpoint listenerEndpoint = this.testserver.getListenerEndpoint();
         listenerEndpoint.waitFor();
-        
+
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.testserver.getStatus());
-        
+
         InetSocketAddress address = (InetSocketAddress) listenerEndpoint.getAddress();
         InetSocketAddress target = new InetSocketAddress("localhost", address.getPort());
-        
+
         SimpleTestJob[] testjobs = new SimpleTestJob[50];
         for (int i = 0; i < testjobs.length; i++) {
             testjobs[i] = new SimpleTestJob(1000);
@@ -127,11 +127,11 @@ public class TestSSLIOReactors {
             SimpleTestState state = testjob.getTestState();
             Assert.assertNotNull(state);
             Assert.assertEquals(SimpleTestStatus.RESPONSE_RECEIVED, state.getStatus());
-            
+
             String pattern = testjob.getPattern();
             int count = testjob.getCount();
             SessionInputBuffer inbuffer = state.getInBuffer();
-            
+
             for (int n = 0; n < count; n++) {
                 String line = inbuffer.readLine(true);
                 Assert.assertEquals(pattern, line);
@@ -139,15 +139,15 @@ public class TestSSLIOReactors {
             Assert.assertFalse(inbuffer.hasData());
         }
     }
-    
+
     @Test
     public void testGracefulShutdown() throws Exception {
         // Open connections and do nothing
         final int connNo = 10;
-        final AtomicInteger openServerConns = new AtomicInteger(0); 
-        final AtomicInteger closedServerConns = new AtomicInteger(0); 
-        final AtomicInteger openClientConns = new AtomicInteger(0); 
-        final AtomicInteger closedClientConns = new AtomicInteger(0); 
+        final AtomicInteger openServerConns = new AtomicInteger(0);
+        final AtomicInteger closedServerConns = new AtomicInteger(0);
+        final AtomicInteger openClientConns = new AtomicInteger(0);
+        final AtomicInteger closedClientConns = new AtomicInteger(0);
 
         this.testserver.start(new NoOpSimpleProtocolHandler() {
 
@@ -183,12 +183,12 @@ public class TestSSLIOReactors {
             }
 
         });
-        
+
         ListenerEndpoint listenerEndpoint = this.testserver.getListenerEndpoint();
         listenerEndpoint.waitFor();
-        
+
         Assert.assertEquals(IOReactorStatus.ACTIVE, this.testserver.getStatus());
-        
+
         InetSocketAddress address = (InetSocketAddress) listenerEndpoint.getAddress();
         InetSocketAddress target = new InetSocketAddress("localhost", address.getPort());
 
@@ -204,10 +204,10 @@ public class TestSSLIOReactors {
         // Make sure all connections go down
         this.testclient.shutdown(5000);
         this.testserver.shutdown(5000);
-        
+
         Assert.assertEquals(openServerConns.get(), closedServerConns.get());
         Assert.assertEquals(openClientConns.get(), closedClientConns.get());
     }
-    
+
 }
 

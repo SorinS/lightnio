@@ -28,10 +28,10 @@ import com.ok2c.lightnio.impl.IOReactorConfig;
 public class SimpleServer extends AbstractIOService<DefaultListeningIOReactor>{
 
     private ListenerEndpoint endpoint;
-    
+
     public SimpleServer(IOReactorConfig config) throws IOException {
         super(new DefaultListeningIOReactor(
-                config, 
+                config,
                 new SimpleThreadFactory("Server")));
     }
 
@@ -53,9 +53,9 @@ public class SimpleServer extends AbstractIOService<DefaultListeningIOReactor>{
         this.endpoint = getIOReactor().listen(new InetSocketAddress(0));
         super.start(handler);
     }
-    
+
     public List<ExceptionEvent> getAuditLog() {
         return getIOReactor().getAuditLog();
     }
-    
+
 }

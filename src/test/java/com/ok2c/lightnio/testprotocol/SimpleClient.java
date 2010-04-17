@@ -29,7 +29,7 @@ public class SimpleClient extends AbstractIOService<DefaultConnectingIOReactor> 
 
     public SimpleClient(final IOReactorConfig config) throws IOException {
         super(new DefaultConnectingIOReactor(
-                config, 
+                config,
                 new SimpleThreadFactory("Client")));
     }
 
@@ -45,9 +45,9 @@ public class SimpleClient extends AbstractIOService<DefaultConnectingIOReactor> 
     public SessionRequest openConnection(final InetSocketAddress address, final Object attachment) {
          return getIOReactor().connect(address, null, attachment, null);
     }
- 
+
     public List<ExceptionEvent> getAuditLog() {
         return getIOReactor().getAuditLog();
     }
-    
+
 }

@@ -24,23 +24,23 @@ public class SimpleIOEventDispatch implements IOEventDispatch {
 
     private static final String TEST_STATE = "test-state";
     private static final String TEST_SESSION = "test-session";
-    
+
     private final String id;
     private final SimpleProtocolHandler handler;
-    
+
     public SimpleIOEventDispatch(final String id, final SimpleProtocolHandler handler) {
         super();
         this.id = id;
         this.handler = handler;
     }
-    
+
     public void connected(final IOSession session) {
         SimpleTestState state = new SimpleTestState(new HeapByteBufferAllocator());
         session.setBufferStatus(state);
         IOSession testSession = new LoggingIOSession(session, this.id);
         session.setAttribute(TEST_STATE, state);
         session.setAttribute(TEST_SESSION, testSession);
-        
+
         try {
             this.handler.connected(testSession, state);
         } catch (IOException ex) {

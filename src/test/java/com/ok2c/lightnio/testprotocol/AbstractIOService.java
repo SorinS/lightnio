@@ -28,18 +28,18 @@ public abstract class AbstractIOService<R extends IOReactor> {
 
     private volatile IOReactorThread thread;
     private ListenerEndpoint endpoint;
-    
+
     public AbstractIOService(R ioreactor) throws IOException {
         super();
         this.ioReactor = ioreactor;
     }
-    
+
     protected R getIOReactor() {
         return this.ioReactor;
     }
-    
-    protected abstract IOEventDispatch createIOEventDispatch(SimpleProtocolHandler handler); 
-    
+
+    protected abstract IOEventDispatch createIOEventDispatch(SimpleProtocolHandler handler);
+
     public void start(final SimpleProtocolHandler handler) {
         this.thread = new IOReactorThread(handler);
         this.thread.start();
@@ -48,7 +48,7 @@ public abstract class AbstractIOService<R extends IOReactor> {
     private void execute(final SimpleProtocolHandler handler) throws IOException {
         this.ioReactor.execute(createIOEventDispatch(handler));
     }
-    
+
     public ListenerEndpoint getListenerEndpoint() {
         return this.endpoint;
     }
@@ -56,13 +56,13 @@ public abstract class AbstractIOService<R extends IOReactor> {
     public IOReactorStatus getStatus() {
         return this.ioReactor.getStatus();
     }
-    
+
     public void join(long timeout) throws InterruptedException {
         if (this.thread != null) {
             this.thread.join(timeout);
         }
     }
-    
+
     public Exception getException() {
         if (this.thread != null) {
             return this.thread.getException();
@@ -70,7 +70,7 @@ public abstract class AbstractIOService<R extends IOReactor> {
             return null;
         }
     }
-    
+
     public void shutdown(long timeout) throws IOException {
         long start = System.currentTimeMillis();
         this.ioReactor.shutdown(timeout);
@@ -84,18 +84,18 @@ public abstract class AbstractIOService<R extends IOReactor> {
             throw new InterruptedIOException(ex.getMessage());
         }
     }
-    
+
     private class IOReactorThread extends Thread {
 
         private final SimpleProtocolHandler handler;
-        
+
         private volatile Exception ex;
-        
+
         public IOReactorThread(final SimpleProtocolHandler handler) {
             super();
             this.handler = handler;
         }
-        
+
         @Override
         public void run() {
             try {
@@ -104,11 +104,11 @@ public abstract class AbstractIOService<R extends IOReactor> {
                 this.ex = ex;
             }
         }
-        
+
         public Exception getException() {
             return this.ex;
         }
 
-    }    
-    
+    }
+
 }

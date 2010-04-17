@@ -28,7 +28,7 @@ public class ExpandableBuffer {
 
     private final ByteBufferAllocator allocator;
     private int mode;
-    
+
     protected ByteBuffer buffer = null;
 
     /**

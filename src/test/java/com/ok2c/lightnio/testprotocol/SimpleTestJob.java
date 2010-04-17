@@ -20,14 +20,14 @@ public class SimpleTestJob {
 
     private static final Random RND = new Random();
     private static final String TEST_CHARS = "0123456789ABCDEF";
-    
+
     private final int count;
     private final String pattern;
-    
+
     private volatile boolean completed;
     private volatile SimpleTestState state;
     private volatile Exception exception;
-    
+
     public SimpleTestJob(int maxCount) {
         super();
         this.count = RND.nextInt(maxCount - 1) + 1;
@@ -64,19 +64,19 @@ public class SimpleTestJob {
         }
         return buffer.toString();
     }
-    
+
     public SimpleTestState getTestState() {
         return this.state;
     }
-    
+
     public boolean isSuccessful() {
         return this.exception == null && this.state != null;
     }
-    
+
     public Exception getException() {
         return this.exception;
     }
-    
+
     public boolean isCompleted() {
         return this.completed;
     }
@@ -89,7 +89,7 @@ public class SimpleTestJob {
         this.state = state;
         notifyAll();
     }
-    
+
     public synchronized void failure(final SimpleTestState state, final Exception exception) {
         if (this.completed) {
             return;
@@ -99,11 +99,11 @@ public class SimpleTestJob {
         this.exception = exception;
         notifyAll();
     }
-    
+
     public synchronized void waitFor() throws InterruptedException {
         while (!this.completed) {
             wait();
         }
     }
-    
+
 }

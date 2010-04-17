@@ -151,10 +151,10 @@ public class TestIOReactors {
     public void testGracefulShutdown() throws Exception {
         // Open connections and do nothing
         final int connNo = 10;
-        final AtomicInteger openServerConns = new AtomicInteger(0); 
-        final AtomicInteger closedServerConns = new AtomicInteger(0); 
-        final AtomicInteger openClientConns = new AtomicInteger(0); 
-        final AtomicInteger closedClientConns = new AtomicInteger(0); 
+        final AtomicInteger openServerConns = new AtomicInteger(0);
+        final AtomicInteger closedServerConns = new AtomicInteger(0);
+        final AtomicInteger openClientConns = new AtomicInteger(0);
+        final AtomicInteger closedClientConns = new AtomicInteger(0);
 
         this.testserver.start(new NoOpSimpleProtocolHandler() {
 
@@ -306,7 +306,7 @@ public class TestIOReactors {
         this.testserver.join(20000);
 
         Assert.assertEquals(1, requestConns.get());
-        
+
         Exception ex = this.testserver.getException();
         Assert.assertNotNull(ex);
         Assert.assertTrue(ex instanceof IOReactorException);

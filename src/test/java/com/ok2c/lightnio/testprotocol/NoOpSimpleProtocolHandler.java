@@ -34,5 +34,5 @@ public class NoOpSimpleProtocolHandler implements SimpleProtocolHandler {
 
     public void outputReady(IOSession session, SimpleTestState state) throws IOException {
     }
-    
+
 }

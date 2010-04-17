@@ -37,10 +37,10 @@ public class SimpleSSLServer extends AbstractIOService<DefaultListeningIOReactor
     private final SSLContext sslcontext;
 
     private ListenerEndpoint endpoint;
-    
+
     public SimpleSSLServer(IOReactorConfig config) throws Exception {
         super(new DefaultListeningIOReactor(
-                config, 
+                config,
                 new SimpleThreadFactory("SSL server")));
         this.sslcontext = createSSLContext();
     }
@@ -53,7 +53,7 @@ public class SimpleSSLServer extends AbstractIOService<DefaultListeningIOReactor
             return KeyManagerFactory.getInstance("SunX509");
         }
     }
-    
+
     protected SSLContext createSSLContext() throws Exception {
         ClassLoader cl = getClass().getClassLoader();
         URL url = cl.getResource("test.keystore");
@@ -61,7 +61,7 @@ public class SimpleSSLServer extends AbstractIOService<DefaultListeningIOReactor
         keystore.load(url.openStream(), "nopassword".toCharArray());
         KeyManagerFactory kmfactory = createKeyManagerFactory();
         kmfactory.init(keystore, "nopassword".toCharArray());
-        KeyManager[] keymanagers = kmfactory.getKeyManagers(); 
+        KeyManager[] keymanagers = kmfactory.getKeyManagers();
         SSLContext sslcontext = SSLContext.getInstance("TLS");
         sslcontext.init(keymanagers, null, null);
         return sslcontext;
@@ -86,9 +86,9 @@ public class SimpleSSLServer extends AbstractIOService<DefaultListeningIOReactor
         this.endpoint = getIOReactor().listen(new InetSocketAddress(0));
         super.start(handler);
     }
-    
+
     public List<ExceptionEvent> getAuditLog() {
         return getIOReactor().getAuditLog();
     }
-    
+
 }
