@@ -221,7 +221,7 @@ public class SSLIOSession implements IOSession, SessionBufferStatus {
             this.inEncrypted.flip();
             SSLEngineResult result = this.sslEngine.unwrap(this.inEncrypted, this.inPlain);
             this.inEncrypted.compact();
-            
+
             opStatus = result.getStatus();
             if (opStatus == Status.CLOSED) {
                 this.status = CLOSED;
@@ -244,7 +244,7 @@ public class SSLIOSession implements IOSession, SessionBufferStatus {
         doHandshake();
         decryptData();
         // Some decrypted data is available or at the end of stream
-        return (this.appEventMask & SelectionKey.OP_READ) > 0 
+        return (this.appEventMask & SelectionKey.OP_READ) > 0
             && (this.inPlain.position() > 0 || (this.endOfStream && this.status == ACTIVE));
     }
 

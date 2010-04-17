@@ -24,7 +24,7 @@ import com.ok2c.lightnio.SessionOutputBuffer;
 public class SimpleClientProtocolHandler implements SimpleProtocolHandler {
 
     public void connected(
-            final IOSession session, 
+            final IOSession session,
             final SimpleTestState state) {
         SimpleTestJob job = (SimpleTestJob) session.getAttribute(IOSession.ATTACHMENT_KEY);
         if (job == null) {
@@ -35,7 +35,7 @@ public class SimpleClientProtocolHandler implements SimpleProtocolHandler {
     }
 
     public void outputReady(
-            final IOSession session, 
+            final IOSession session,
             final SimpleTestState state) throws IOException {
         SessionOutputBuffer outbuf = state.getOutBuffer();
         switch (state.getStatus()) {
@@ -59,7 +59,7 @@ public class SimpleClientProtocolHandler implements SimpleProtocolHandler {
     }
 
     public void inputReady(
-            final IOSession session, 
+            final IOSession session,
             final SimpleTestState state) throws IOException {
         SessionInputBuffer inbuf = state.getInBuffer();
         switch (state.getStatus()) {
@@ -78,7 +78,7 @@ public class SimpleClientProtocolHandler implements SimpleProtocolHandler {
     }
 
     public void disconnected(
-            final IOSession session, 
+            final IOSession session,
             final SimpleTestState state) {
         SimpleTestJob job = (SimpleTestJob) session.getAttribute(IOSession.ATTACHMENT_KEY);
         if (job == null) {
@@ -98,5 +98,5 @@ public class SimpleClientProtocolHandler implements SimpleProtocolHandler {
         state.setStatus(SimpleTestStatus.FAILURE);
         job.failure(state, ex);
     }
-    
+
 }

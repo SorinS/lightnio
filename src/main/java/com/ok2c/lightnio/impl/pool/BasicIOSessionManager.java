@@ -71,12 +71,12 @@ public class BasicIOSessionManager implements IOSessionManager<SocketAddress> {
         }
 
     }
-    
+
     static class InternalPoolEntryCallback implements PoolEntryCallback<SocketAddress> {
 
         private final SessionPool<SocketAddress> pool;
         private final BasicFuture<ManagedIOSession> future;
-        
+
         public InternalPoolEntryCallback(
                 final SessionPool<SocketAddress> pool,
                 final BasicFuture<ManagedIOSession> future) {
@@ -84,7 +84,7 @@ public class BasicIOSessionManager implements IOSessionManager<SocketAddress> {
             this.pool = pool;
             this.future = future;
         }
-        
+
         public void completed(final PoolEntry<SocketAddress> entry) {
             ManagedIOSession result = new BasicManagedIOSession(this.pool, entry);
             this.future.completed(result);

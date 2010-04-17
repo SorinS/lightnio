@@ -21,8 +21,8 @@ import com.ok2c.lightnio.IOSession;
 public class PoolEntry<T> {
 
     public static final String ATTRIB = "com.ok2c.lightnio.pool-entry";
-    private static AtomicLong COUNTER = new AtomicLong(); 
-    
+    private static AtomicLong COUNTER = new AtomicLong();
+
     private final long id;
     private final T route;
     private final IOSession session;
@@ -54,7 +54,7 @@ public class PoolEntry<T> {
     public void reset() {
         this.session.removeAttribute(ATTRIB);
     }
-    
+
     @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder();
@@ -67,5 +67,5 @@ public class PoolEntry<T> {
         buffer.append("]");
         return buffer.toString();
     }
-    
+
 }

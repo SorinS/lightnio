@@ -70,7 +70,7 @@ public class SessionOutputBufferImpl extends ExpandableBuffer implements Session
             this.charencoder = charset.newEncoder();
         }
     }
-    
+
     public int flush(final WritableByteChannel channel) throws IOException {
         if (channel == null) {
             throw new IllegalArgumentException("Channel may not be null");

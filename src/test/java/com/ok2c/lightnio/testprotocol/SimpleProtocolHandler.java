@@ -20,7 +20,7 @@ import com.ok2c.lightnio.IOSession;
 
 public interface SimpleProtocolHandler {
 
-    void connected(IOSession session, SimpleTestState state) 
+    void connected(IOSession session, SimpleTestState state)
         throws IOException;
 
     void inputReady(IOSession session, SimpleTestState state)
@@ -31,7 +31,7 @@ public interface SimpleProtocolHandler {
 
     void disconnected(IOSession session, SimpleTestState state)
         throws IOException;
-    
+
     void exception(IOSession session, SimpleTestState state, Exception ex);
 
 }

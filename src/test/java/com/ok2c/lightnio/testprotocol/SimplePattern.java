@@ -18,7 +18,7 @@ public class SimplePattern {
 
     private final String text;
     private final int count;
-    
+
     public SimplePattern(final String text, int count) {
         super();
         if (text == null || text.length() == 0) {
@@ -47,5 +47,5 @@ public class SimplePattern {
         buffer.append(this.count);
         return buffer.toString();
     }
-    
+
 }

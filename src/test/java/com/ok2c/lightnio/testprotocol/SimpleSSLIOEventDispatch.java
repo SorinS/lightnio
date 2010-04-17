@@ -30,14 +30,14 @@ public class SimpleSSLIOEventDispatch implements IOEventDispatch {
     private static final String TEST_STATE = "test-state";
     private static final String TEST_SESSION = "test-session";
     private static final String SSL_SESSION = "ssl-session";
-    
+
     private final String id;
     private final SSLContext sslcontext;
     private final SSLMode mode;
     private final SimpleProtocolHandler handler;
-    
+
     public SimpleSSLIOEventDispatch(
-            final String id, 
+            final String id,
             final SSLContext sslcontext,
             final SSLMode mode,
             final SimpleProtocolHandler handler) {
@@ -47,33 +47,33 @@ public class SimpleSSLIOEventDispatch implements IOEventDispatch {
         this.mode = mode;
         this.handler = handler;
     }
-    
+
     public void connected(final IOSession session) {
         SimpleTestState state = new SimpleTestState(new HeapByteBufferAllocator());
-        
-        SSLIOSession sslSession = new SSLIOSession(session, this.sslcontext, null); 
+
+        SSLIOSession sslSession = new SSLIOSession(session, this.sslcontext, null);
         session.setBufferStatus(state);
-        
+
         IOSession testSession = new LoggingIOSession(sslSession, this.id);
-                
+
         session.setAttribute(TEST_STATE, state);
         session.setAttribute(TEST_SESSION, testSession);
         session.setAttribute(SSL_SESSION, sslSession);
-        
+
         try {
             this.handler.connected(testSession, state);
         } catch (IOException ex) {
             this.handler.exception(testSession, state, ex);
             session.close();
         }
-        
+
         try {
             sslSession.bind(this.mode);
         } catch (SSLException ex) {
             this.handler.exception(testSession, state, ex);
             testSession.shutdown();
         }
-        
+
     }
 
     public void disconnected(final IOSession session) {
@@ -89,7 +89,7 @@ public class SimpleSSLIOEventDispatch implements IOEventDispatch {
         SimpleTestState state = (SimpleTestState) session.getAttribute(TEST_STATE);
         IOSession testSession = (IOSession) session.getAttribute(TEST_SESSION);
         SSLIOSession sslSession = (SSLIOSession) session.getAttribute(SSL_SESSION);
-        
+
         try {
             if (sslSession.isAppInputReady()) {
                 this.handler.inputReady(testSession, state);
@@ -125,7 +125,7 @@ public class SimpleSSLIOEventDispatch implements IOEventDispatch {
                 sslSession.close();
             } else if (sslSession.getStatus() == IOSession.CLOSING) {
                 if (sslSession.isOutboundDone() && !sslSession.isInboundDone()) {
-                    // The session failed to terminate cleanly 
+                    // The session failed to terminate cleanly
                     sslSession.shutdown();
                 }
             }

@@ -25,13 +25,13 @@ import com.ok2c.lightnio.buffer.CharArrayBuffer;
 public class SimpleServerProtocolHandler implements SimpleProtocolHandler {
 
     public void connected(
-            final IOSession session, 
+            final IOSession session,
             final SimpleTestState state) {
         session.setEventMask(SelectionKey.OP_READ);
     }
 
     public void inputReady(
-            final IOSession session, 
+            final IOSession session,
             final SimpleTestState state) throws IOException {
         SessionInputBuffer inbuf = state.getInBuffer();
         switch (state.getStatus()) {
@@ -67,13 +67,13 @@ public class SimpleServerProtocolHandler implements SimpleProtocolHandler {
     }
 
     public void outputReady(
-            final IOSession session, 
+            final IOSession session,
             final SimpleTestState state) throws IOException {
         SessionOutputBuffer outbuf = state.getOutBuffer();
         switch (state.getStatus()) {
         case REQUEST_RECEIVED:
             SimplePattern pattern = (SimplePattern) session.getAttribute("pattern");
-            CharArrayBuffer buffer = new CharArrayBuffer(32); 
+            CharArrayBuffer buffer = new CharArrayBuffer(32);
             buffer.append(pattern.getText());
             for (int i = 0; i < pattern.getCount(); i++) {
                 outbuf.writeLine(buffer);
@@ -95,12 +95,12 @@ public class SimpleServerProtocolHandler implements SimpleProtocolHandler {
     }
 
     public void disconnected(
-            final IOSession session, 
+            final IOSession session,
             final SimpleTestState state) {
     }
 
     public void exception(final IOSession session, final SimpleTestState state, final Exception ex) {
         state.setStatus(SimpleTestStatus.FAILURE);
     }
-    
+
 }

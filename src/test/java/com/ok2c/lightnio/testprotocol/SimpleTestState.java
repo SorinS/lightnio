@@ -24,7 +24,7 @@ import com.ok2c.lightnio.impl.SessionInputBufferImpl;
 import com.ok2c.lightnio.impl.SessionOutputBufferImpl;
 
 /**
- * Test session. This class is NOT thread-safe. It should not be 
+ * Test session. This class is NOT thread-safe. It should not be
  * accessed outside the I/O dispatch thread of the I/O reactor.
  */
 public class SimpleTestState implements SessionBufferStatus {
@@ -32,21 +32,21 @@ public class SimpleTestState implements SessionBufferStatus {
     private static final int INIT_BUFFER_SIZE = 8 * 1024;
     private static final int LINE_BUFFER_SIZE = 1 * 1024;
     private static final Charset ASCII = Charset.forName("ASCII");
-    
+
     private final SessionInputBuffer inbuf;
     private final SessionOutputBuffer outbuf;
-    
+
     private SimpleTestStatus status;
-    
+
     public SimpleTestState(final ByteBufferAllocator allocator) {
         super();
         this.inbuf = new SessionInputBufferImpl(
-                INIT_BUFFER_SIZE, 
+                INIT_BUFFER_SIZE,
                 LINE_BUFFER_SIZE,
                 allocator,
                 ASCII);
         this.outbuf = new SessionOutputBufferImpl(
-                INIT_BUFFER_SIZE, 
+                INIT_BUFFER_SIZE,
                 LINE_BUFFER_SIZE,
                 allocator,
                 ASCII);
@@ -91,5 +91,5 @@ public class SimpleTestState implements SessionBufferStatus {
         buffer.append("]");
         return buffer.toString();
     }
-    
+
 }

@@ -68,7 +68,7 @@ public class SessionInputBufferImpl extends ExpandableBuffer implements SessionI
             this.chardecoder = charset.newDecoder();
         }
     }
-    
+
     public int fill(final ReadableByteChannel channel) throws IOException {
         if (channel == null) {
             throw new IllegalArgumentException("Channel may not be null");
@@ -141,7 +141,7 @@ public class SessionInputBufferImpl extends ExpandableBuffer implements SessionI
         }
         return -1;
     }
-    
+
     public boolean readLine(
             final CharArrayBuffer linebuffer,
             boolean endOfStream) throws CharacterCodingException {
