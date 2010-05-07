@@ -468,7 +468,7 @@ public class TestIOReactors {
         ioreactor.shutdown(1000);
         t.join(1000);
 
-        Assert.assertEquals(IOReactorStatus.SHUT_DOWN, ioreactor.getStatus());
+        Assert.assertTrue(ioreactor.getStatus().compareTo(IOReactorStatus.SHUTTING_DOWN) >= 0);
     }
 
     @Test
