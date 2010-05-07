@@ -21,8 +21,8 @@ import java.nio.channels.ByteChannel;
 import java.nio.channels.SelectionKey;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ok2c.lightnio.IOSession;
 import com.ok2c.lightnio.SessionBufferStatus;
@@ -35,7 +35,7 @@ public class LoggingIOSession implements IOSession {
 
     private static AtomicLong COUNT = new AtomicLong(0);
 
-    private final Log log;
+    private final Logger log;
     private final IOSession session;
     private final ByteChannel channel;
     private final String id;
@@ -48,7 +48,7 @@ public class LoggingIOSession implements IOSession {
         this.session = session;
         this.channel = new LoggingByteChannel();
         this.id = id + "-" + COUNT.incrementAndGet();
-        this.log = LogFactory.getLog(session.getClass());
+        this.log = LoggerFactory.getLogger(session.getClass());
     }
 
     public ByteChannel channel() {
