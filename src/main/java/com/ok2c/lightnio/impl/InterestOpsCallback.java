@@ -18,7 +18,7 @@ package com.ok2c.lightnio.impl;
  * Callback interface used internally by I/O session implementations to delegate execution
  * of a {@link java.nio.channels.SelectionKey#interestOps(int)} operation to the I/O reactor.
  */
-public interface InterestOpsCallback {
+interface InterestOpsCallback {
 
     void addInterestOps(InterestOpEntry entry);
 

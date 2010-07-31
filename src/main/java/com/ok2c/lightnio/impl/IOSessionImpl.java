@@ -73,7 +73,7 @@ public class IOSessionImpl implements IOSession {
     }
 
     public SocketAddress getLocalAddress() {
-        Channel channel = this.key.channel();
+        Channel channel = this.channel;
         if (channel instanceof SocketChannel) {
             return ((SocketChannel)channel).socket().getLocalSocketAddress();
         } else {
@@ -82,7 +82,7 @@ public class IOSessionImpl implements IOSession {
     }
 
     public SocketAddress getRemoteAddress() {
-        Channel channel = this.key.channel();
+        Channel channel = this.channel;
         if (channel instanceof SocketChannel) {
             return ((SocketChannel)channel).socket().getRemoteSocketAddress();
         } else {
@@ -90,11 +90,11 @@ public class IOSessionImpl implements IOSession {
         }
     }
 
-    public int getEventMask() {
+    public synchronized int getEventMask() {
         return this.interestOpsCallback != null ? this.currentEventMask : this.key.interestOps();
     }
 
-    public void setEventMask(int ops) {
+    public synchronized void setEventMask(int ops) {
         if (this.status == CLOSED) {
             return;
         }
@@ -113,7 +113,7 @@ public class IOSessionImpl implements IOSession {
         this.key.selector().wakeup();
     }
 
-    public void setEvent(int op) {
+    public synchronized void setEvent(int op) {
         if (this.status == CLOSED) {
             return;
         }
@@ -127,15 +127,13 @@ public class IOSessionImpl implements IOSession {
             // add this operation to the interestOps() queue
             this.interestOpsCallback.addInterestOps(entry);
         } else {
-            synchronized (this.key) {
-                int ops = this.key.interestOps();
-                this.key.interestOps(ops | op);
-            }
+            int ops = this.key.interestOps();
+            this.key.interestOps(ops | op);
         }
         this.key.selector().wakeup();
     }
 
-    public void clearEvent(int op) {
+    public synchronized void clearEvent(int op) {
         if (this.status == CLOSED) {
             return;
         }
@@ -149,23 +147,21 @@ public class IOSessionImpl implements IOSession {
             // add this operation to the interestOps() queue
             this.interestOpsCallback.addInterestOps(entry);
         } else {
-            synchronized (this.key) {
-                int ops = this.key.interestOps();
-                this.key.interestOps(ops & ~op);
-            }
+            int ops = this.key.interestOps();
+            this.key.interestOps(ops & ~op);
         }
         this.key.selector().wakeup();
     }
 
-    public int getSocketTimeout() {
+    public synchronized int getSocketTimeout() {
         return this.socketTimeout;
     }
 
-    public void setSocketTimeout(int timeout) {
+    public synchronized void setSocketTimeout(int timeout) {
         this.socketTimeout = timeout;
     }
 
-    public void close() {
+    public synchronized void close() {
         if (this.status == CLOSED) {
             return;
         }
@@ -189,7 +185,7 @@ public class IOSessionImpl implements IOSession {
         return this.status;
     }
 
-    public boolean isClosed() {
+    public synchronized boolean isClosed() {
         return this.status == CLOSED || !this.key.isValid();
     }
 
@@ -200,11 +196,13 @@ public class IOSessionImpl implements IOSession {
     }
 
     public boolean hasBufferedInput() {
-        return this.bufferStatus != null && this.bufferStatus.hasBufferedInput();
+        SessionBufferStatus bufferStatus = this.bufferStatus;
+        return bufferStatus != null && bufferStatus.hasBufferedInput();
     }
 
     public boolean hasBufferedOutput() {
-        return this.bufferStatus != null && this.bufferStatus.hasBufferedOutput();
+        SessionBufferStatus bufferStatus = this.bufferStatus;
+        return bufferStatus != null && bufferStatus.hasBufferedOutput();
     }
 
     public void setBufferStatus(final SessionBufferStatus bufferStatus) {
@@ -241,7 +239,7 @@ public class IOSessionImpl implements IOSession {
     }
 
     @Override
-    public String toString() {
+    public synchronized String toString() {
         StringBuffer buffer = new StringBuffer();
         buffer.append("[");
         if (this.key.isValid()) {
