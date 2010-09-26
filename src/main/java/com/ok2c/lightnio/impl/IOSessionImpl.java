@@ -185,8 +185,8 @@ public class IOSessionImpl implements IOSession {
         return this.status;
     }
 
-    public synchronized boolean isClosed() {
-        return this.status == CLOSED || !this.key.isValid();
+    public boolean isClosed() {
+        return this.status == CLOSED;
     }
 
     public void shutdown() {
